@@ -94,6 +94,8 @@ export async function runScan(
         jawline: { score: null, confidence: 0 },
       },
       overall: null,
+      overallPercentile: null,
+      standardized: null,
       tier: null,
       engineVersion: "0.1.0",
       bandProfile: "faceharmony-parity",

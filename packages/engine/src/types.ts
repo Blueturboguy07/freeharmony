@@ -179,6 +179,10 @@ export interface ScanResult {
   areas: Record<AreaKey, AreaResult>;
   /** Overall harmony %, one decimal — null when refused. */
   overall: number | null;
+  /** Population percentile of `overall` from the calibration corpus. */
+  overallPercentile: number | null;
+  /** T-score vs. the corpus: median face = 50, 15 pts ≈ 1 population SD. */
+  standardized: number | null;
   tier: Tier | null;
   engineVersion: string;
   bandProfile: BandProfile;

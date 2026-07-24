@@ -42,6 +42,8 @@ const lines = readFileSync(file, "utf8").split("\n").filter(Boolean);
 console.log(`corpus: ${lines.length} faces`);
 
 const values = new Map<string, number[]>();
+const metricScores = new Map<string, number[]>();
+const overallScores: number[] = [];
 let used = 0;
 let refused = 0;
 
@@ -55,6 +57,8 @@ for (const line of lines) {
     mirrored: false,
     transformationMatrix: row.matrix ?? undefined,
     sex: "neutral",
+    // Score distributions must reflect what the app actually ships.
+    bandProfile: "calibrated",
   };
   const result = analyze(input);
   if (!result.ok) {
@@ -62,10 +66,14 @@ for (const line of lines) {
     continue;
   }
   used++;
+  if (result.overall !== null) overallScores.push(result.overall);
   for (const m of result.metrics) {
-    // Values only — percentiles are score-system-independent facts.
+    // Raw values — score-system-independent facts.
     if (!values.has(m.key)) values.set(m.key, []);
     values.get(m.key)!.push(m.value);
+    // Scores under the calibrated profile — for score-space standardization.
+    if (!metricScores.has(m.key)) metricScores.set(m.key, []);
+    metricScores.get(m.key)!.push(m.score);
   }
 }
 
@@ -113,13 +121,47 @@ for (const [key, vals] of values) {
 
 console.log(report.join("\n"));
 
+// ---- score-space statistics (calibrated profile) ----------------------------
+overallScores.sort((a, b) => a - b);
+const oMean = overallScores.reduce((a, b) => a + b, 0) / overallScores.length;
+const oSd = Math.sqrt(
+  overallScores.reduce((a, b) => a + (b - oMean) ** 2, 0) / overallScores.length,
+);
+const scoreStats = {
+  overall: {
+    pcts: PCTS,
+    p: PCTS.map((p) => Number(percentile(overallScores, p).toFixed(2))),
+    n: overallScores.length,
+    mean: Number(oMean.toFixed(3)),
+    median: Number(percentile(overallScores, 50).toFixed(3)),
+    sd: Number(oSd.toFixed(3)),
+  },
+  byMetric: {} as Record<string, { mean: number; median: number; sd: number }>,
+};
+for (const [key, arr] of metricScores) {
+  arr.sort((a, b) => a - b);
+  const mMean = arr.reduce((a, b) => a + b, 0) / arr.length;
+  const mSd = Math.sqrt(arr.reduce((a, b) => a + (b - mMean) ** 2, 0) / arr.length);
+  scoreStats.byMetric[key] = {
+    mean: Number(mMean.toFixed(2)),
+    median: Number(percentile(arr, 50).toFixed(2)),
+    sd: Number(mSd.toFixed(2)),
+  };
+}
+console.log(
+  `\noverall harmony (calibrated profile): mean=${scoreStats.overall.mean} ` +
+    `median=${scoreStats.overall.median} sd=${scoreStats.overall.sd} n=${scoreStats.overall.n}`,
+);
+
 const out = {
   meta: {
     source: "FFHQ (Flickr-Faces-HQ) 512px mirror — aggregate statistics only, no images retained",
     faces: used,
-    engineNote: "values computed by the production engine formulas; sex-independent raw values",
+    engineNote:
+      "values computed by the production engine formulas (sex-independent); score stats under the 'calibrated' band profile. Corpus is broad internet photos, unlabeled — norms are vs. a general population, not per-group.",
   },
   metrics: norms,
+  scores: scoreStats,
 };
 const dest = join(import.meta.dirname, "..", "src", "scoring", "norms.json");
 writeFileSync(dest, JSON.stringify(out, null, 1));

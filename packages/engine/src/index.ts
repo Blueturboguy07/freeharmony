@@ -11,7 +11,11 @@ import { METRICS } from "./metrics/registry";
 import { resolveBand } from "./scoring/bands";
 import { round1, subScore, verdictOf } from "./scoring/curve";
 import { aggregate } from "./scoring/aggregate";
-import { percentileOf } from "./scoring/norms";
+import {
+  overallPercentileOf,
+  percentileOf,
+  standardizedOverall,
+} from "./scoring/norms";
 
 export const ENGINE_VERSION = "0.1.0";
 
@@ -53,6 +57,8 @@ export function analyze(input: ScanInput): ScanResult {
       metrics: [],
       areas: { ...EMPTY_AREAS },
       overall: null,
+      overallPercentile: null,
+      standardized: null,
       tier: null,
       engineVersion: ENGINE_VERSION,
       bandProfile,
@@ -71,6 +77,8 @@ export function analyze(input: ScanInput): ScanResult {
       metrics: [],
       areas: { ...EMPTY_AREAS },
       overall: null,
+      overallPercentile: null,
+      standardized: null,
       tier: null,
       engineVersion: ENGINE_VERSION,
       bandProfile,
@@ -140,6 +148,14 @@ export function analyze(input: ScanInput): ScanResult {
     metrics,
     areas: agg.areas,
     overall: agg.overall,
+    overallPercentile:
+      agg.overall !== null && bandProfile === "calibrated"
+        ? overallPercentileOf(agg.overall)
+        : null,
+    standardized:
+      agg.overall !== null && bandProfile === "calibrated"
+        ? standardizedOverall(agg.overall)
+        : null,
     tier: agg.tier,
     engineVersion: ENGINE_VERSION,
     bandProfile,
@@ -154,7 +170,13 @@ export { runGates, eyeAspectRatio } from "./gates/index";
 export { METRICS, TRICHION_K, computeJawEdgeSupport } from "./metrics/registry";
 export { BANDS, resolveBand } from "./scoring/bands";
 export { subScore, verdictOf, round1 } from "./scoring/curve";
-export { percentileOf, NORMS_META } from "./scoring/norms";
+export {
+  percentileOf,
+  overallPercentileOf,
+  standardizedOverall,
+  overallScoreStats,
+  NORMS_META,
+} from "./scoring/norms";
 export { AREA_WEIGHTS, AREA_LABELS, aggregate, tierOf } from "./scoring/aggregate";
 export * as LANDMARKS from "./landmarks/indices";
 export {

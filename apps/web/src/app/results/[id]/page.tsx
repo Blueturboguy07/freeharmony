@@ -181,18 +181,35 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
 
       {/* Overall harmony — muted when the AI cross-check flags the scan */}
       <div
-        className={`card flex items-center justify-between px-5 py-4 ${
+        className={`card px-5 py-4 flex flex-col gap-2 ${
           scan.ai?.sanity?.confidence === "low" ? "opacity-50" : ""
         }`}
       >
-        <div>
-          <p className="label-caps">Overall Harmony</p>
-          <p className="text-lg">{result.tier ? TIER_LABEL[result.tier] : "—"}</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="label-caps">Overall Harmony</p>
+            <p className="text-lg">{result.tier ? TIER_LABEL[result.tier] : "—"}</p>
+          </div>
+          <p className="numeral text-4xl">
+            {result.overall?.toFixed(1)}
+            <span className="text-xl text-ink-2">%</span>
+          </p>
         </div>
-        <p className="numeral text-4xl">
-          {result.overall?.toFixed(1)}
-          <span className="text-xl text-ink-2">%</span>
-        </p>
+        {result.standardized !== null && result.overallPercentile !== null && (
+          <div className="flex items-baseline justify-between border-t border-line pt-2">
+            <span className="text-xs text-ink-2">
+              vs. population · standardized{" "}
+              <span className="numeral text-sm text-gold">{result.standardized.toFixed(1)}</span>
+              <span className="text-ink-3"> (50 = median face)</span>
+            </span>
+            <span className="text-xs text-ink-2">
+              top{" "}
+              <span className="numeral text-sm text-gold">
+                {Math.max(1, 100 - result.overallPercentile)}%
+              </span>
+            </span>
+          </div>
+        )}
       </div>
 
       <AiCheckCard scan={scan} onScanUpdated={setScan} />

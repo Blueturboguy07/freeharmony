@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 import { analyze } from "../src/index";
 import { BANDS, resolveBand } from "../src/scoring/bands";
 import { subScore } from "../src/scoring/curve";
-import { percentileOf } from "../src/scoring/norms";
+import {
+  overallPercentileOf,
+  overallScoreStats,
+  percentileOf,
+  standardizedOverall,
+} from "../src/scoring/norms";
 import { canonicalInput } from "./helpers";
 
 describe("calibrated band profile", () => {
@@ -60,6 +65,46 @@ describe("percentiles from the corpus", () => {
       const p = percentileOf("canthalTilt", v)!;
       expect(p).toBeGreaterThanOrEqual(prev);
       prev = p;
+    }
+  });
+});
+
+describe("score-space standardization", () => {
+  const stats = overallScoreStats();
+
+  it("standardized score behaves — or is null pre-calibration", () => {
+    if (!stats) {
+      expect(standardizedOverall(70)).toBeNull();
+      expect(overallPercentileOf(70)).toBeNull();
+      return;
+    }
+    // Corpus mean maps to 50 by construction.
+    expect(standardizedOverall(stats.mean)).toBeCloseTo(50, 0);
+    // One SD above the mean maps to ~65.
+    expect(standardizedOverall(stats.mean + stats.sd)).toBeCloseTo(65, 0);
+    // Clamped at the extremes.
+    expect(standardizedOverall(0)).toBeGreaterThanOrEqual(1);
+    expect(standardizedOverall(200)).toBeLessThanOrEqual(99);
+    // Monotonic.
+    let prev = -1;
+    for (let v = 0; v <= 100; v += 5) {
+      const s = standardizedOverall(v)!;
+      expect(s).toBeGreaterThanOrEqual(prev);
+      prev = s;
+    }
+    // Median score sits at the 50th percentile of its own distribution.
+    const midPct = overallPercentileOf(stats.median)!;
+    expect(midPct).toBeGreaterThanOrEqual(45);
+    expect(midPct).toBeLessThanOrEqual(55);
+  });
+
+  it("analyze() only standardizes under the calibrated profile", () => {
+    const parity = analyze(canonicalInput({ bandProfile: "faceharmony-parity" }));
+    expect(parity.standardized).toBeNull();
+    const cal = analyze(canonicalInput({ bandProfile: "calibrated" }));
+    if (stats) {
+      expect(cal.standardized).not.toBeNull();
+      expect(cal.overallPercentile).not.toBeNull();
     }
   });
 });
