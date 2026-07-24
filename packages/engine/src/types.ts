@@ -12,7 +12,7 @@ export interface ImageLike {
 }
 
 export type Sex = "masculine" | "feminine" | "neutral";
-export type BandProfile = "faceharmony-parity" | "literature";
+export type BandProfile = "faceharmony-parity" | "literature" | "calibrated";
 export type AreaKey = "symmetry" | "eyeArea" | "midface" | "jawline";
 export type Tier = "excellent" | "good" | "fair" | "needs-work";
 export type Verdict = "ideal" | "near-ideal" | "needs-work";

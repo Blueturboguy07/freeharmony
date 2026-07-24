@@ -78,6 +78,13 @@ for (const [key, vals] of values) {
   vals.sort((a, b) => a - b);
   const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
   const sd = Math.sqrt(vals.reduce((a, b) => a + (b - mean) ** 2, 0) / vals.length);
+  // Degenerate distribution (e.g. jawlineDefinition with no image pixels in
+  // the corpus): a percentile table would be meaningless — omit it so the
+  // app shows no percentile for that metric.
+  if (percentile(vals, 75) - percentile(vals, 25) < 1e-9) {
+    console.log(`${key.padEnd(20)} skipped (degenerate distribution in this corpus)`);
+    continue;
+  }
   norms[key] = {
     pcts: PCTS,
     p: PCTS.map((p) => Number(percentile(vals, p).toFixed(5))),

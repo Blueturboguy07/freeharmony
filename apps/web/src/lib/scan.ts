@@ -118,6 +118,7 @@ export async function runScan(
       height: imageData.height,
     },
     sex,
+    bandProfile: "calibrated",
   };
 
   const result = analyze(input);
@@ -183,6 +184,7 @@ export async function reanalyze(
     image: { data: imageData.data, width: imageData.width, height: imageData.height },
     overrides,
     sex,
+    bandProfile: "calibrated",
   });
 }
 

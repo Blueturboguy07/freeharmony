@@ -1,19 +1,20 @@
-import type { Band, BandSet, MetricKey, Sex } from "../types";
+import type { Band, BandProfile, BandSet, MetricKey, Sex } from "../types";
 
 /**
  * Ideal bands per metric, per profile.
  *
  * 'faceharmony-parity' — the bands observed in the source app's own UI
- *   (see research UI-SPEC §2.2). Ship default: parity is the product goal.
+ *   (see research UI-SPEC §2.2). Kept for comparison with the original.
  * 'literature' — bands from the aesthetics/orthodontic literature digest.
  *   These use DIFFERENT measurement conventions for some metrics (notably
  *   jaw-to-cheekbone) and must never be blended with parity values.
- *
- * Two parity bands are known to sit ~one band-width off the canonical-average
- * face (lipRatio, eyeSeparationRatio) — kept for parity, re-anchor later via
- * the calibrate harness.
+ * 'calibrated' — the app default: parity's aesthetic centers, except where
+ *   the FFHQ calibration corpus (n=592 gate-passing faces) proved an anchor
+ *   sat in a measurement-convention mismatch, plus falloff scales set to the
+ *   corpus's robust SD (IQR/1.349) so "score 50" ≈ one population-SD outside
+ *   the band. Derived by scripts/calibrate.ts; see norms.json meta.
  */
-export const BANDS: Record<MetricKey, Record<"faceharmony-parity" | "literature", BandSet>> = {
+const RAW_BANDS: Record<MetricKey, Record<"faceharmony-parity" | "literature", BandSet>> = {
   canthalTilt: {
     "faceharmony-parity": { lo: 1, hi: 7, sLo: 4, sHi: 4 },
     literature: { lo: 2, hi: 6, sLo: 4, sHi: 4 },
@@ -114,6 +115,66 @@ export const BANDS: Record<MetricKey, Record<"faceharmony-parity" | "literature"
     },
   },
 };
+
+/**
+ * Corpus-derived re-anchors. These three bands were provably anchored in a
+ * different measurement convention than the engine's (band edges landed at
+ * population percentiles [1,11], [92,100], and [3,36] respectively on the
+ * FFHQ corpus). Centers re-derived from the corpus median; widths kept
+ * comparable to the aesthetic-band tradition.
+ */
+const CALIBRATED_BAND_OVERRIDES: Partial<Record<MetricKey, BandSet>> = {
+  eyeSeparationRatio: { lo: 0.485, hi: 0.515 },
+  facialFifths: { lo: 0.72, hi: 1 },
+  eyeToMouthAngle: { lo: 45.5, hi: 50.5 },
+  jawSymmetry: { lo: 84, hi: 100 },
+};
+
+/** Robust SD (IQR/1.349) per metric from the FFHQ corpus — falloff scales. */
+const CALIBRATED_S: Record<MetricKey, number> = {
+  canthalTilt: 2.32,
+  eyeSeparationRatio: 0.02,
+  eyeSymmetry: 1.86,
+  facialThirds: 0.062,
+  midLowerThird: 0.089,
+  facialFifths: 0.075,
+  midfaceRatio: 0.082,
+  fwhr: 0.167,
+  jawToCheekbone: 0.029,
+  chinToPhiltrum: 0.407,
+  lipRatio: 0.349,
+  mouthToNoseWidth: 0.19,
+  eyeToMouthAngle: 3.31,
+  overallSymmetry: 5.39,
+  jawSymmetry: 10.33,
+  jawAngularity: 3.06,
+  // No corpus signal (needs image pixels) — keeps its hand-set scale.
+  jawlineDefinition: 0.28,
+  browPosition: 0.045,
+};
+
+function withS(b: Band, s: number): Band {
+  return { lo: b.lo, hi: b.hi, sLo: s, sHi: s };
+}
+
+function buildCalibrated(key: MetricKey): BandSet {
+  const base = CALIBRATED_BAND_OVERRIDES[key] ?? RAW_BANDS[key]["faceharmony-parity"];
+  const s = CALIBRATED_S[key];
+  if ("masculine" in base) {
+    return {
+      masculine: withS(base.masculine, s),
+      feminine: withS(base.feminine, s),
+    };
+  }
+  return withS(base, s);
+}
+
+export const BANDS: Record<MetricKey, Record<BandProfile, BandSet>> = Object.fromEntries(
+  (Object.keys(RAW_BANDS) as MetricKey[]).map((k) => [
+    k,
+    { ...RAW_BANDS[k], calibrated: buildCalibrated(k) },
+  ]),
+) as Record<MetricKey, Record<BandProfile, BandSet>>;
 
 /**
  * Resolve a possibly-dimorphic band for the given sex.
