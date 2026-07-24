@@ -33,6 +33,7 @@ const VERDICT_STYLE: Record<MetricResult["verdict"], { label: string; cls: strin
 export default function ResultsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [scan, setScan] = useState<StoredScan | null | undefined>(undefined);
+  const [view, setView] = useState<"front" | "side">("front");
   const [selected, setSelected] = useState<MetricKey>("canthalTilt");
   const [adjusting, setAdjusting] = useState(false);
   const [draftOverrides, setDraftOverrides] = useState<Record<number, { x: number; y: number }>>({});
@@ -40,6 +41,9 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
 
   useEffect(() => {
     setScan(getScan(id) ?? null);
+    if (typeof window !== "undefined" && window.location.hash === "#side") {
+      setView("side");
+    }
   }, [id]);
 
   const result = scan?.result;
@@ -88,7 +92,26 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
     <Shell title="Metrics Explorer" shareScan={scan}>
       <SummaryCard scan={scan} onScanUpdated={setScan} />
 
-      {/* Photo viewport with per-metric overlay */}
+      {/* Front / Side */}
+      <div className="grid grid-cols-2 gap-2">
+        {(["front", "side"] as const).map((v) => (
+          <button
+            key={v}
+            onClick={() => setView(v)}
+            className={`card py-2.5 text-sm uppercase tracking-[0.2em] ${
+              view === v ? "border-gold/70" : "text-ink-2"
+            }`}
+          >
+            {v}
+          </button>
+        ))}
+      </div>
+
+      {view === "side" ? (
+        <SideView scan={scan} />
+      ) : (
+        <>
+          {/* Photo viewport with per-metric overlay */}
       <div className="card relative overflow-hidden">
         <PhotoOverlay
           photo={scan.photo}
@@ -216,7 +239,96 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
           </button>
         ))}
       </div>
+        </>
+      )}
     </Shell>
+  );
+}
+
+/** SIDE tab: contour-anchor profile analysis (separate from the mesh). */
+function SideView({ scan }: { scan: StoredScan }) {
+  const side = scan.side;
+  if (!side) {
+    return (
+      <div className="card p-8 text-center flex flex-col gap-4">
+        <p className="font-display text-xl">No side profile yet</p>
+        <p className="text-sm text-ink-2 max-w-[40ch] mx-auto">
+          The face mesh can&apos;t see a true 90° profile, so the side scan uses
+          eight silhouette points you place — then pure geometry: nose angles,
+          profile convexity, and the E-line.
+        </p>
+        <Link
+          href={`/scan/side?attach=${scan.id}`}
+          className="gold-gradient self-center rounded-full px-7 py-3 text-sm font-semibold tracking-[0.15em] uppercase"
+        >
+          Capture Side Profile
+        </Link>
+      </div>
+    );
+  }
+  return (
+    <>
+      <div className="card relative overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={side.photo} alt="Side profile" className="w-full" draggable={false} />
+        <svg
+          viewBox="0 0 1 1"
+          preserveAspectRatio="none"
+          className="pointer-events-none absolute inset-0 h-full w-full"
+        >
+          <line
+            x1={side.anchors.pronasale.x}
+            y1={side.anchors.pronasale.y}
+            x2={side.anchors.pogonion.x}
+            y2={side.anchors.pogonion.y}
+            stroke="#ead0a4"
+            strokeOpacity="0.6"
+            strokeWidth="0.004"
+            strokeDasharray="0.02 0.012"
+          />
+          {Object.values(side.anchors).map((p, i) => (
+            <g key={i}>
+              <circle cx={p.x} cy={p.y} r="0.014" fill="none" stroke="#ead0a4" strokeWidth="0.005" />
+              <circle cx={p.x} cy={p.y} r="0.004" fill="#ead0a4" />
+            </g>
+          ))}
+        </svg>
+      </div>
+
+      <Link
+        href={`/scan/side?attach=${scan.id}`}
+        className="card py-3 text-center text-sm tracking-[0.15em] uppercase text-ink-2 hover:text-ink"
+      >
+        ↻ Retake / re-place points
+      </Link>
+
+      <div className="flex flex-col gap-3 pb-10">
+        {side.results.map((m) => (
+          <div key={m.key} className="card px-5 py-4">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-[15px] font-medium">{m.label}</span>
+              <span className="truncate text-xs text-ink-2">
+                {m.unit === "deg" ? `${m.band.lo}° – ${m.band.hi}°` : `${m.band.lo} – ${m.band.hi}`}
+              </span>
+            </div>
+            <div className="mt-1 flex items-baseline gap-3">
+              <span className="numeral text-2xl text-gold">
+                {m.unit === "deg" ? `${m.value.toFixed(1)}°` : m.value.toFixed(3)}
+              </span>
+              <span className={`text-sm ${VERDICT_STYLE[m.verdict].cls}`}>
+                {VERDICT_STYLE[m.verdict].label}
+              </span>
+            </div>
+            <p className="mt-1 text-xs text-ink-3">{m.meaning}</p>
+          </div>
+        ))}
+        <p className="text-xs text-ink-3 text-center">
+          Side metrics are informational and don&apos;t move your overall harmony
+          score — point placement is manual, so we don&apos;t mix it into the
+          deterministic number.
+        </p>
+      </div>
+    </>
   );
 }
 

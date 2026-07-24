@@ -154,6 +154,20 @@ export { BANDS, resolveBand } from "./scoring/bands";
 export { subScore, verdictOf, round1 } from "./scoring/curve";
 export { AREA_WEIGHTS, AREA_LABELS, aggregate, tierOf } from "./scoring/aggregate";
 export * as LANDMARKS from "./landmarks/indices";
+export {
+  analyzeProfile,
+  defaultProfileAnchors,
+  profileFacing,
+  PROFILE_ANCHOR_LABELS,
+  PROFILE_ANCHOR_ORDER,
+} from "./profile";
+export type {
+  ProfileAnchor,
+  ProfileAnchorKey,
+  ProfileAnchors,
+  ProfileMetricKey,
+  ProfileMetricResult,
+} from "./profile";
 export { CANONICAL_VERTS } from "./landmarks/canonical";
 export { regionalResiduals } from "./procrustes";
 export {

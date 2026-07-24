@@ -1,6 +1,11 @@
 "use client";
 
-import type { ScanResult, Sex } from "@freeharmony/engine";
+import type {
+  ProfileAnchors,
+  ProfileMetricResult,
+  ScanResult,
+  Sex,
+} from "@freeharmony/engine";
 import type { StoredInput } from "./scan";
 
 // All persistence is localStorage — nothing ever leaves the device unless the
@@ -29,6 +34,13 @@ export interface StoredScan {
     sanity?: import("./ai/schema").SanityAnnotation;
     report?: import("./ai/schema").DeepReport;
     summary?: import("./ai/schema").DeepReport;
+  };
+  /** Side-profile capture: contour-anchor analysis, separate from the mesh. */
+  side?: {
+    photo: string;
+    anchors: ProfileAnchors;
+    results: ProfileMetricResult[];
+    at: number;
   };
 }
 
