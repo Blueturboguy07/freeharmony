@@ -72,7 +72,7 @@ export default function ScanPage() {
       setStatus({ kind: "analyzing" });
       try {
         const profile = loadProfile();
-        const { result, photo } = await runScan(
+        const { result, photo, input } = await runScan(
           { canvas, mirrored: false },
           profile.sex,
         );
@@ -81,7 +81,7 @@ export default function ScanPage() {
           return;
         }
         const id = newScanId();
-        saveScan({ id, createdAt: Date.now(), result, photo });
+        saveScan({ id, createdAt: Date.now(), result, photo, input: input ?? undefined });
         stopCamera();
         router.push(`/results/${id}`);
       } catch (err) {

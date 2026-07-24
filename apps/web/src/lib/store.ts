@@ -1,6 +1,7 @@
 "use client";
 
 import type { ScanResult, Sex } from "@freeharmony/engine";
+import type { StoredInput } from "./scan";
 
 // All persistence is localStorage — nothing ever leaves the device unless the
 // user explicitly opts in (leaderboard submit, AI provider call).
@@ -19,6 +20,10 @@ export interface StoredScan {
   result: ScanResult;
   /** JPEG data URL, long edge ≤ 768. */
   photo: string;
+  /** Raw landmarks etc. for re-analysis (Adjust Points, profile changes). */
+  input?: StoredInput;
+  /** Landmark overrides the user applied via Adjust Points. */
+  overrides?: Record<number, { x: number; y: number }>;
 }
 
 const PROFILE_KEY = "fh.profile.v1";

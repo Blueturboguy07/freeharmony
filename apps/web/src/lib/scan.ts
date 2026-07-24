@@ -47,6 +47,16 @@ export interface ScanOutcome {
   result: ScanResult;
   /** JPEG data URL, long edge ≤ 768px — for display, history, and AI calls. */
   photo: string;
+  /** Everything needed to re-run analyze() later (Adjust Points, sex change) —
+   *  minus the pixel buffer, which is rebuilt from `photo` on demand. */
+  input: StoredInput | null;
+}
+
+export interface StoredInput {
+  landmarks: ScanInput["landmarks"];
+  mirrored: boolean;
+  blendshapes?: Record<string, number>;
+  transformationMatrix?: number[];
 }
 
 /**
@@ -89,7 +99,7 @@ export async function runScan(
       bandProfile: "faceharmony-parity",
       sex,
     };
-    return { result: gateFail, photo };
+    return { result: gateFail, photo, input: null };
   }
 
   const ctx = frame.canvas.getContext("2d", { willReadFrequently: true })!;
@@ -110,7 +120,52 @@ export async function runScan(
     sex,
   };
 
-  return { result: analyze(input), photo };
+  return {
+    result: analyze(input),
+    photo,
+    input: {
+      landmarks: input.landmarks,
+      mirrored: frame.mirrored,
+      blendshapes: input.blendshapes,
+      transformationMatrix: input.transformationMatrix,
+    },
+  };
+}
+
+/**
+ * Re-run the engine against the stored (downscaled) photo — used by Adjust
+ * Points and profile changes. Metrics are scale-invariant, so analyzing at
+ * 768px reproduces the original values.
+ */
+export async function reanalyze(
+  stored: StoredInput,
+  photoDataUrl: string,
+  sex: Sex,
+  overrides?: Record<number, { x: number; y: number }>,
+): Promise<ScanResult> {
+  const img = new Image();
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error("photo decode failed"));
+    img.src = photoDataUrl;
+  });
+  const canvas = document.createElement("canvas");
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
+  ctx.drawImage(img, 0, 0);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  return analyze({
+    landmarks: stored.landmarks,
+    imageWidth: canvas.width,
+    imageHeight: canvas.height,
+    mirrored: stored.mirrored,
+    blendshapes: stored.blendshapes,
+    transformationMatrix: stored.transformationMatrix,
+    image: { data: imageData.data, width: imageData.width, height: imageData.height },
+    overrides,
+    sex,
+  });
 }
 
 export function downscaleToDataURL(
