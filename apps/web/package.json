@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
     "@freeharmony/advice": "workspace:*",
     "@freeharmony/engine": "workspace:*",
     "@mediapipe/tasks-vision": "^0.10.21",

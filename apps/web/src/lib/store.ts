@@ -24,6 +24,21 @@ export interface StoredScan {
   input?: StoredInput;
   /** Landmark overrides the user applied via Adjust Points. */
   overrides?: Record<number, { x: number; y: number }>;
+  /** Optional AI annotations — never part of the score itself. */
+  ai?: {
+    sanity?: import("./ai/schema").SanityAnnotation;
+    report?: import("./ai/schema").DeepReport;
+  };
+}
+
+export function updateScan(id: string, patch: Partial<StoredScan>): StoredScan | undefined {
+  const scans = loadScans();
+  const idx = scans.findIndex((s) => s.id === id);
+  if (idx === -1) return undefined;
+  const next = { ...scans[idx]!, ...patch };
+  scans[idx] = next;
+  localStorage.setItem(SCANS_KEY, JSON.stringify(scans));
+  return next;
 }
 
 const PROFILE_KEY = "fh.profile.v1";

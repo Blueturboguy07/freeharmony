@@ -14,7 +14,7 @@ import { AREA_LABELS, AREA_WEIGHTS } from "@freeharmony/engine";
 import type { AreaKey } from "@freeharmony/engine";
 import { reanalyze } from "@/lib/scan";
 import { getScan, loadProfile, loadScans, saveScan, type StoredScan } from "@/lib/store";
-import { ScoreRing } from "@/components/ScoreRing";
+import { AiCheckCard } from "@/components/AiCheckCard";
 
 const TIER_LABEL: Record<Tier, string> = {
   excellent: "Excellent",
@@ -153,8 +153,12 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
         </p>
       )}
 
-      {/* Overall harmony */}
-      <div className="card flex items-center justify-between px-5 py-4">
+      {/* Overall harmony — muted when the AI cross-check flags the scan */}
+      <div
+        className={`card flex items-center justify-between px-5 py-4 ${
+          scan.ai?.sanity?.confidence === "low" ? "opacity-50" : ""
+        }`}
+      >
         <div>
           <p className="label-caps">Overall Harmony</p>
           <p className="text-lg">{result.tier ? TIER_LABEL[result.tier] : "—"}</p>
@@ -164,6 +168,8 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
           <span className="text-xl text-ink-2">%</span>
         </p>
       </div>
+
+      <AiCheckCard scan={scan} onScanUpdated={setScan} />
 
       {/* Area sub-scores */}
       <div className="card grid grid-cols-4 gap-2 px-4 py-4">
