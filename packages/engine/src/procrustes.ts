@@ -10,10 +10,15 @@ export interface RegionResiduals {
 }
 
 /**
- * Rigid-similarity fit of the observed 3D landmarks to the canonical model.
+ * Rigid-similarity fit of the observed landmarks to the canonical model.
  * A region whose residual is large is being extrapolated, not observed —
  * glasses, hair, hand, mask. Residuals are normalized by IPD so thresholds
  * are resolution-independent.
+ *
+ * The fit is deliberately 2D (z zeroed on both sides): real MediaPipe z is
+ * noisy with an inconsistent depth scale, and including it makes a healthy
+ * frontal face blow the residual budget in every region simultaneously.
+ * x/y landmark positions are the reliable signal.
  */
 export function regionalResiduals(frame: Frame): RegionResiduals {
   const n = Math.min(frame.pts.length, CANONICAL_VERTS.length);
@@ -22,8 +27,8 @@ export function regionalResiduals(frame: Frame): RegionResiduals {
   for (let i = 0; i < n; i++) {
     const c = CANONICAL_VERTS[i]!;
     const p = frame.pts[i]!;
-    src[i] = c;
-    dst[i] = [p.x, p.y, p.z];
+    src[i] = [c[0], c[1], 0];
+    dst[i] = [p.x, p.y, 0];
   }
   const fit = umeyama(src, dst);
 
@@ -44,12 +49,12 @@ export function regionalResiduals(frame: Frame): RegionResiduals {
   }
 
   for (let i = 0; i < n; i++) {
-    const mapped = applyUmeyama(fit, CANONICAL_VERTS[i]!);
+    const c = CANONICAL_VERTS[i]!;
+    const mapped = applyUmeyama(fit, [c[0], c[1], 0]);
     const p = frame.pts[i]!;
     const dx = mapped[0] - p.x;
     const dy = mapped[1] - p.y;
-    const dz = mapped[2] - p.z;
-    const sq = dx * dx + dy * dy + dz * dz;
+    const sq = dx * dx + dy * dy;
     allSum += sq;
     allN++;
     const region = regionOf.get(i);

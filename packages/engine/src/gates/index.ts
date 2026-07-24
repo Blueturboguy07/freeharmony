@@ -58,8 +58,11 @@ const JAW_OPEN_REJECT = 0.3;
 const JAW_OPEN_WARN = 0.18;
 const SMILE_REJECT = 0.45;
 const SMILE_WARN = 0.28;
-const RESIDUAL_BLOCK = 0.14; // CALIBRATE
-const RESIDUAL_DEGRADE = 0.09; // CALIBRATE
+// Normal anatomical variation from the canonical AVERAGE face is large —
+// these must only trip on landmark hallucination (hand/mask/hair), never on
+// an unusual-but-visible face. Block is reserved for egregious misfits.
+const RESIDUAL_BLOCK = 0.4; // CALIBRATE
+const RESIDUAL_DEGRADE = 0.16; // CALIBRATE
 const JAW_EDGE_MIN = 0.25; // CALIBRATE
 
 function gate(

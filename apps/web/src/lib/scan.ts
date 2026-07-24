@@ -120,8 +120,26 @@ export async function runScan(
     sex,
   };
 
+  const result = analyze(input);
+  // Field-calibration breadcrumbs (harmless in prod, invaluable in bug reports).
+  if (result.frame) {
+    console.info(
+      "[freeharmony] pose",
+      {
+        rollDeg: result.frame.rollDeg.toFixed(1),
+        yawDeg: result.frame.yawDeg?.toFixed(1) ?? null,
+        pitchDeg: result.frame.pitchDeg?.toFixed(1) ?? null,
+        yawAsym: result.frame.yawAsym.toFixed(3),
+        poseSource: result.frame.poseSource,
+      },
+      "gates",
+      result.gates.blocking.map((g) => g.code),
+      result.gates.warnings.map((g) => g.code),
+    );
+  }
+
   return {
-    result: analyze(input),
+    result,
     photo,
     input: {
       landmarks: input.landmarks,
