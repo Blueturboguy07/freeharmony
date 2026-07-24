@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/* FreeHarmony design tokens — dark, warm, champagne-gold. */
+@theme {
+  --color-bg: #0c0a08;
+  --color-surface: #151210;
+  --color-surface-raised: #1b1714;
+  --color-line: rgba(255, 255, 255, 0.06);
+  --color-gold: #d8b888;
+  --color-gold-hi: #ead0a4;
+  --color-gold-lo: #c9a06b;
+  --color-ink: #f2ede6;
+  --color-ink-2: #8f8a82;
+  --color-ink-3: #6b665f;
+  --color-ideal: #66bb6a;
+  --color-near: #cbb68a;
+  --color-work: #d9a44a;
+  --color-danger: #e07856;
+  --color-on-gold: #1a140c;
+
+  --font-display: var(--font-playfair), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+
+  --radius-card: 1.5rem;
+  --radius-chip: 1rem;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Serif numerals everywhere a value is shown */
+.numeral {
+  font-family: var(--font-display);
+  font-variant-numeric: oldstyle-nums;
+}
+
+.label-caps {
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+  font-weight: 500;
+}
+
+.gold-gradient {
+  background: linear-gradient(180deg, var(--color-gold-hi) 0%, var(--color-gold-lo) 100%);
+  color: var(--color-on-gold);
+}
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+}
