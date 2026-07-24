@@ -1,7 +1,7 @@
-import type { FaceRegion, Frame } from "./types.js";
-import { CANONICAL_VERTS } from "./landmarks/canonical.js";
-import { REGION_SETS } from "./landmarks/indices.js";
-import { applyUmeyama, umeyama } from "./math/fit.js";
+import type { FaceRegion, Frame } from "./types";
+import { CANONICAL_VERTS } from "./landmarks/canonical";
+import { REGION_SETS } from "./landmarks/indices";
+import { applyUmeyama, umeyama } from "./math/fit";
 
 export interface RegionResiduals {
   /** RMS residual per region, normalized by frame scale (IPD). */

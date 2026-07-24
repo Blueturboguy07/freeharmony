@@ -1,5 +1,5 @@
-import type { Frame, Pt, ScanInput } from "./types.js";
-import { estimatePose, type PoseEstimate } from "./pose.js";
+import type { Frame, Pt, ScanInput } from "./types";
+import { estimatePose, type PoseEstimate } from "./pose";
 import {
   L_CANTHUS_LAT,
   L_CANTHUS_MED,
@@ -7,7 +7,7 @@ import {
   R_CANTHUS_LAT,
   R_CANTHUS_MED,
   R_IRIS_C,
-} from "./landmarks/indices.js";
+} from "./landmarks/indices";
 
 /**
  * Build the measurement frame from raw MediaPipe output. Ordered steps:

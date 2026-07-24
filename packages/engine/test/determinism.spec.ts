@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { analyze } from "../src/index.js";
-import { canonicalInput } from "./helpers.js";
+import { analyze } from "../src/index";
+import { canonicalInput } from "./helpers";
 
 describe("determinism", () => {
   it("500 identical runs produce byte-identical JSON", () => {

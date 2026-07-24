@@ -1,4 +1,4 @@
-import type { ImageLike } from "../types.js";
+import type { ImageLike } from "../types";
 
 /** Grayscale plane with dimensions. All ops integer or exact-float only. */
 export interface GrayPlane {

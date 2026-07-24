@@ -1,4 +1,4 @@
-import type { Band, Verdict } from "../types.js";
+import type { Band, Verdict } from "../types";
 
 const CURVE_P = 1.6;
 const LN2 = 0.6931471805599453;

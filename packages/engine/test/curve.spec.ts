@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
-import { subScore, verdictOf } from "../src/scoring/curve.js";
-import { BANDS, resolveBand } from "../src/scoring/bands.js";
-import type { Band } from "../src/types.js";
+import { subScore, verdictOf } from "../src/scoring/curve";
+import { BANDS, resolveBand } from "../src/scoring/bands";
+import type { Band } from "../src/types";
 
 describe("subScore curve properties", () => {
   const bandArb = fc

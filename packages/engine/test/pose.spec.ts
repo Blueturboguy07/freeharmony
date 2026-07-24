@@ -1,9 +1,9 @@
 // Synthetic pose sweep: pins the Euler sign convention, validates the matrix
 // layout detector, fits the landmark yaw proxy, and checks gate boundaries.
 import { describe, expect, it } from "vitest";
-import { analyze } from "../src/index.js";
-import { eulerFromMatrix, isColumnMajor, yawAsymmetry, YAW_PROXY_TO_DEG } from "../src/pose.js";
-import { buildFrame } from "../src/normalize.js";
+import { analyze } from "../src/index";
+import { eulerFromMatrix, isColumnMajor, yawAsymmetry, YAW_PROXY_TO_DEG } from "../src/pose";
+import { buildFrame } from "../src/normalize";
 import {
   canonicalInput,
   projectCanonical,
@@ -11,7 +11,7 @@ import {
   toColMajor16,
   FRAME_W,
   FRAME_H,
-} from "./helpers.js";
+} from "./helpers";
 
 describe("matrix layout detection", () => {
   it("detects column-major (translation in d[12..14])", () => {

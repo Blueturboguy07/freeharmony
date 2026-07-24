@@ -1,5 +1,5 @@
-import type { Pt } from "./types.js";
-import { L_TRAGION, PRONASALE, R_TRAGION } from "./landmarks/indices.js";
+import type { Pt } from "./types";
+import { L_TRAGION, PRONASALE, R_TRAGION } from "./landmarks/indices";
 
 export interface PoseEstimate {
   yawDeg: number | null;

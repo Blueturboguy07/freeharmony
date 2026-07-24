@@ -1,4 +1,4 @@
-import type { Band, BandSet, MetricKey, Sex } from "../types.js";
+import type { Band, BandSet, MetricKey, Sex } from "../types";
 
 /**
  * Ideal bands per metric, per profile.

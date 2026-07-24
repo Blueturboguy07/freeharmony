@@ -3,10 +3,10 @@
 // is swapped or a formula drifts, assertions fail here in milliseconds with
 // no WASM, images, or network involved.
 import { describe, expect, it } from "vitest";
-import { analyze } from "../src/index.js";
-import { buildFrame } from "../src/normalize.js";
-import { eyeAspectRatio } from "../src/gates/index.js";
-import { canonicalInput, metricValue } from "./helpers.js";
+import { analyze } from "../src/index";
+import { buildFrame } from "../src/normalize";
+import { eyeAspectRatio } from "../src/gates/index";
+import { canonicalInput, metricValue } from "./helpers";
 
 const r = analyze(canonicalInput());
 

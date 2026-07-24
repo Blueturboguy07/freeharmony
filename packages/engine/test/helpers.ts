@@ -1,5 +1,5 @@
-import { CANONICAL_VERTS } from "../src/landmarks/canonical.js";
-import type { Pt, ScanInput } from "../src/types.js";
+import { CANONICAL_VERTS } from "../src/landmarks/canonical";
+import type { Pt, ScanInput } from "../src/types";
 
 // Synthetic frame: 1024×1280 px viewing a 20×25 cm window → isotropic
 // 51.2 px/cm, IPD ≈ 323 px. MediaPipe-style normalized coords (y-down).
@@ -95,7 +95,7 @@ export function canonicalInput(overrides?: Partial<ScanInput>): ScanInput {
 }
 
 export function metricValue(
-  result: ReturnType<typeof import("../src/index.js").analyze>,
+  result: ReturnType<typeof import("../src/index").analyze>,
   key: string,
 ): number {
   const m = result.metrics.find((x) => x.key === key);

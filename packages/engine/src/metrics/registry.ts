@@ -3,7 +3,7 @@ import type {
   MetricContext,
   MetricComputation,
   MetricDef,
-} from "../types.js";
+} from "../types";
 import {
   angleAt,
   chainYAtX,
@@ -13,7 +13,7 @@ import {
   mid,
   pt,
   pupils,
-} from "../landmarks/accessors.js";
+} from "../landmarks/accessors";
 import {
   GLABELLA,
   JAW_SYM_PAIRS,
@@ -54,12 +54,12 @@ import {
   SUBNASALE,
   SYM_PAIRS,
   TRICHION_PROXY,
-} from "../landmarks/indices.js";
-import { fitLinePCA } from "../math/fit.js";
-import { BANDS } from "../scoring/bands.js";
-import { subScore } from "../scoring/curve.js";
-import { resolveBand } from "../scoring/bands.js";
-import { median, sobelMagAt, sobelP90, toGray } from "../image/ops.js";
+} from "../landmarks/indices";
+import { fitLinePCA } from "../math/fit";
+import { BANDS } from "../scoring/bands";
+import { subScore } from "../scoring/curve";
+import { resolveBand } from "../scoring/bands";
+import { median, sobelMagAt, sobelP90, toGray } from "../image/ops";
 
 const RAD2DEG = 180 / Math.PI;
 

@@ -3,8 +3,8 @@ import type {
   AreaResult,
   MetricResult,
   Tier,
-} from "../types.js";
-import { round1 } from "./curve.js";
+} from "../types";
+import { round1 } from "./curve";
 
 /** Area weights. Symmetry is lowest: it is the most photo-artifact-prone. */
 export const AREA_WEIGHTS: Record<AreaKey, number> = {

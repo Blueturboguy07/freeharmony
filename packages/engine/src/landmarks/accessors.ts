@@ -1,4 +1,4 @@
-import type { Frame, Pt } from "../types.js";
+import type { Frame, Pt } from "../types";
 
 /** Indexed access with a hard assert — a missing landmark is a caller bug. */
 export function pt(f: Frame, i: number): Pt {

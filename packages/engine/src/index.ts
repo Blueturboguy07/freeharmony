@@ -4,13 +4,13 @@ import type {
   MetricResult,
   ScanInput,
   ScanResult,
-} from "./types.js";
-import { buildFrame } from "./normalize.js";
-import { runGates } from "./gates/index.js";
-import { METRICS } from "./metrics/registry.js";
-import { resolveBand } from "./scoring/bands.js";
-import { round1, subScore, verdictOf } from "./scoring/curve.js";
-import { aggregate } from "./scoring/aggregate.js";
+} from "./types";
+import { buildFrame } from "./normalize";
+import { runGates } from "./gates/index";
+import { METRICS } from "./metrics/registry";
+import { resolveBand } from "./scoring/bands";
+import { round1, subScore, verdictOf } from "./scoring/curve";
+import { aggregate } from "./scoring/aggregate";
 
 export const ENGINE_VERSION = "0.1.0";
 
@@ -146,20 +146,20 @@ export function analyze(input: ScanInput): ScanResult {
 }
 
 // Public surface
-export * from "./types.js";
-export { buildFrame } from "./normalize.js";
-export { runGates, eyeAspectRatio } from "./gates/index.js";
-export { METRICS, TRICHION_K, computeJawEdgeSupport } from "./metrics/registry.js";
-export { BANDS, resolveBand } from "./scoring/bands.js";
-export { subScore, verdictOf, round1 } from "./scoring/curve.js";
-export { AREA_WEIGHTS, AREA_LABELS, aggregate, tierOf } from "./scoring/aggregate.js";
-export * as LANDMARKS from "./landmarks/indices.js";
-export { CANONICAL_VERTS } from "./landmarks/canonical.js";
-export { regionalResiduals } from "./procrustes.js";
+export * from "./types";
+export { buildFrame } from "./normalize";
+export { runGates, eyeAspectRatio } from "./gates/index";
+export { METRICS, TRICHION_K, computeJawEdgeSupport } from "./metrics/registry";
+export { BANDS, resolveBand } from "./scoring/bands";
+export { subScore, verdictOf, round1 } from "./scoring/curve";
+export { AREA_WEIGHTS, AREA_LABELS, aggregate, tierOf } from "./scoring/aggregate";
+export * as LANDMARKS from "./landmarks/indices";
+export { CANONICAL_VERTS } from "./landmarks/canonical";
+export { regionalResiduals } from "./procrustes";
 export {
   estimatePose,
   eulerFromMatrix,
   isColumnMajor,
   yawAsymmetry,
   YAW_PROXY_TO_DEG,
-} from "./pose.js";
+} from "./pose";

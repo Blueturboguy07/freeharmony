@@ -4,7 +4,7 @@ import type {
   Gate,
   GateReport,
   ScanInput,
-} from "../types.js";
+} from "../types";
 import {
   FACE_OVAL,
   L_CANTHUS_LAT,
@@ -19,8 +19,8 @@ import {
   R_LID_INF2,
   R_LID_SUP,
   R_LID_SUP2,
-} from "../landmarks/indices.js";
-import { dx, dy, pt } from "../landmarks/accessors.js";
+} from "../landmarks/indices";
+import { dx, dy, pt } from "../landmarks/accessors";
 import {
   boxDownsample,
   clampRect,
@@ -29,9 +29,9 @@ import {
   laplacianSharpness,
   toGray,
   type GrayPlane,
-} from "../image/ops.js";
-import { regionalResiduals } from "../procrustes.js";
-import { computeJawEdgeSupport } from "../metrics/registry.js";
+} from "../image/ops";
+import { regionalResiduals } from "../procrustes";
+import { computeJawEdgeSupport } from "../metrics/registry";
 
 // Thresholds. Values marked CALIBRATE are first-guess constants to be
 // re-anchored with the calibrate harness on a real photo corpus.
