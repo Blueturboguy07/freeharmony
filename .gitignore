@@ -6,4 +6,4 @@ node_modules
 .vercel
 apps/web/public/mediapipe/
 calibration/.venv/
-calibration/landmarks.jsonl
+calibration/landmarks*.jsonl
