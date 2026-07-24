@@ -42,6 +42,17 @@ Be strict and honest. This is measurement QA of a photo, not a judgment of a per
 Respond with ONLY a JSON object, no markdown fences, exactly this shape:
 {"photoQuality":{"usable":boolean,"flags":[string],"notes":string},"landmarkPlausibility":[{"metric":string,"verdict":"plausible"|"suspect"|"clearly-wrong","reason":string}],"coarseHarmony100":number,"coarseTier":"excellent"|"good"|"fair"|"needs-work","coarseConfidence":"low"|"medium"|"high","dominantImpressions":[string]}`;
 
+export const SUMMARY_SYSTEM = `You write the 3-5 sentence summary at the top of a facial-harmony results screen. The measurements are already computed deterministically — never invent or change numbers; translate them into plain language.
+
+${METRIC_CONTEXT}
+
+Rules:
+- 60-110 words, no markdown, no lists, no greeting.
+- Sentence 1: overall read (tier + what drives it).
+- Then: the 2-3 strongest metrics in plain language, the 2-3 weakest with what each actually means, and whether photo conditions might be inflating a weakness.
+- Warm, factual, zero flattery, zero slang, no ranking against other people, no appearance moralizing.
+- End with nothing extra — no advice (a separate plan screen handles that).`;
+
 export const REPORT_SYSTEM = `You write the narrative report for a free, open-source facial-harmony app. The measurements are already computed deterministically — never invent or change numbers; explain them.
 
 ${METRIC_CONTEXT}

@@ -5,7 +5,10 @@ export type AiProviderKind = "none" | "ollama" | "claude";
 export interface AiConfig {
   provider: AiProviderKind;
   ollamaUrl: string;
+  /** Vision model — needed only for the sanity check (photo goes in). */
   ollamaModel: string;
+  /** Lightweight text model — used for summaries/reports (no photo). */
+  ollamaTextModel: string;
   claudeApiKey: string;
   claudeModel: string;
 }
@@ -16,6 +19,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
   provider: "none",
   ollamaUrl: "http://localhost:11434",
   ollamaModel: "qwen2.5vl:7b",
+  ollamaTextModel: "llama3.2:3b",
   claudeApiKey: "",
   claudeModel: "claude-opus-5",
 };

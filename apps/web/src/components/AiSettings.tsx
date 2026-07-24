@@ -65,10 +65,23 @@ export function AiSettings() {
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-xs text-ink-2">Vision model</span>
+            <span className="text-xs text-ink-2">
+              Vision model (sanity check — needs the photo)
+            </span>
             <input
               value={cfg.ollamaModel}
               onChange={(e) => update({ ollamaModel: e.target.value })}
+              className="rounded-chip border border-line bg-surface-raised px-3 py-2 text-sm"
+              spellCheck={false}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-ink-2">
+              Text model (summaries — lightweight, ~2GB)
+            </span>
+            <input
+              value={cfg.ollamaTextModel}
+              onChange={(e) => update({ ollamaTextModel: e.target.value })}
               className="rounded-chip border border-line bg-surface-raised px-3 py-2 text-sm"
               spellCheck={false}
             />

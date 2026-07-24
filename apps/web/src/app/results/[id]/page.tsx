@@ -15,6 +15,7 @@ import type { AreaKey } from "@freeharmony/engine";
 import { reanalyze } from "@/lib/scan";
 import { getScan, loadProfile, loadScans, saveScan, type StoredScan } from "@/lib/store";
 import { AiCheckCard } from "@/components/AiCheckCard";
+import { SummaryCard } from "@/components/SummaryCard";
 
 const TIER_LABEL: Record<Tier, string> = {
   excellent: "Excellent",
@@ -85,6 +86,8 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
 
   return (
     <Shell title="Metrics Explorer" shareScan={scan}>
+      <SummaryCard scan={scan} onScanUpdated={setScan} />
+
       {/* Photo viewport with per-metric overlay */}
       <div className="card relative overflow-hidden">
         <PhotoOverlay

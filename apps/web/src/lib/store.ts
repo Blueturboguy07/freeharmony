@@ -28,6 +28,7 @@ export interface StoredScan {
   ai?: {
     sanity?: import("./ai/schema").SanityAnnotation;
     report?: import("./ai/schema").DeepReport;
+    summary?: import("./ai/schema").DeepReport;
   };
 }
 

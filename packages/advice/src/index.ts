@@ -60,3 +60,4 @@ export function generatePlan(result: ScanResult, sex: Sex): Plan {
 
 export { RULES, SAFETY_NOTES } from "./rules";
 export type { AdviceRule, AdviceCategory } from "./rules";
+export { generateSummary } from "./summary";

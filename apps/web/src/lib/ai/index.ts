@@ -5,7 +5,12 @@ import type { Sex } from "@freeharmony/engine";
 import type { StoredScan } from "../store";
 import { loadAiConfig } from "./config";
 import { buildAnnotatedOverlay, dataUrlToBase64 } from "./overlay";
-import { buildMeasurementPayload, REPORT_SYSTEM, SANITY_SYSTEM } from "./prompt";
+import {
+  buildMeasurementPayload,
+  REPORT_SYSTEM,
+  SANITY_SYSTEM,
+  SUMMARY_SYSTEM,
+} from "./prompt";
 import { callVision } from "./providers";
 import {
   SanityCheckSchema,
@@ -137,6 +142,31 @@ Evaluate per your instructions and answer with the JSON object only.`;
   };
   cachePut(key, annotation);
   return annotation;
+}
+
+/**
+ * AI-worded summary for the top of the results screen. Text-only — runs on
+ * the lightweight local model (no photo leaves the page for this one even
+ * with a cloud provider... it's numbers only).
+ */
+export async function runAiSummary(scan: StoredScan): Promise<DeepReport> {
+  const cfg = loadAiConfig();
+  if (cfg.provider === "none") throw new Error("No AI provider configured");
+  if (scan.result.overall === null) throw new Error("No score to summarize");
+
+  const text = await callVision(cfg, {
+    system: SUMMARY_SYSTEM,
+    userText: `Measurements:\n${buildMeasurementPayload(scan.result)}\n\nWrite the summary.`,
+    images: [],
+    maxTokens: 500,
+    preferTextModel: true,
+  });
+
+  return {
+    text: text.trim(),
+    model: cfg.provider === "claude" ? cfg.claudeModel : cfg.ollamaTextModel,
+    at: Date.now(),
+  };
 }
 
 /** Generate the narrative deep report (markdown). */

@@ -6,9 +6,11 @@ import type { AiConfig } from "./config";
 export interface VisionRequest {
   system: string;
   userText: string;
-  /** base64 JPEG payloads, no data: prefix. */
+  /** base64 JPEG payloads, no data: prefix. Empty = text-only request. */
   images: string[];
   maxTokens: number;
+  /** Text-only requests can run on a much lighter local model. */
+  preferTextModel?: boolean;
 }
 
 /** Call the configured provider; returns the raw text response. */
@@ -19,15 +21,19 @@ export async function callVision(cfg: AiConfig, req: VisionRequest): Promise<str
 }
 
 async function callOllama(cfg: AiConfig, req: VisionRequest): Promise<string> {
+  const textOnly = req.images.length === 0;
+  const model = textOnly && req.preferTextModel ? cfg.ollamaTextModel : cfg.ollamaModel;
   const res = await fetch(`${cfg.ollamaUrl.replace(/\/$/, "")}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: cfg.ollamaModel,
+      model,
       stream: false,
       messages: [
         { role: "system", content: req.system },
-        { role: "user", content: req.userText, images: req.images },
+        textOnly
+          ? { role: "user", content: req.userText }
+          : { role: "user", content: req.userText, images: req.images },
       ],
       options: { temperature: 0, seed: 7 },
     }),
