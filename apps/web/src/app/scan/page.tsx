@@ -4,9 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Gate } from "@freeharmony/engine";
-import { runScan } from "@/lib/scan";
+import { runScan, type ScanOutcome } from "@/lib/scan";
 import { getLandmarker } from "@/lib/landmarker";
 import { loadProfile, newScanId, saveScan } from "@/lib/store";
+import { ScanSequence } from "@/components/ScanSequence";
 
 type Status =
   | { kind: "idle" }
@@ -14,6 +15,7 @@ type Status =
   | { kind: "camera-ready" }
   | { kind: "camera-error"; message: string }
   | { kind: "analyzing" }
+  | { kind: "sequence"; outcome: ScanOutcome; id: string }
   | { kind: "gate-failed"; gates: Gate[] };
 
 export default function ScanPage() {
@@ -83,7 +85,8 @@ export default function ScanPage() {
         const id = newScanId();
         saveScan({ id, createdAt: Date.now(), result, photo, input: input ?? undefined });
         stopCamera();
-        router.push(`/results/${id}`);
+        // The math is done — now stage the reveal.
+        setStatus({ kind: "sequence", outcome: { result, photo, input }, id });
       } catch (err) {
         setStatus({
           kind: "camera-error",
@@ -119,6 +122,17 @@ export default function ScanPage() {
   );
 
   const cameraOn = status.kind === "camera-ready" || status.kind === "analyzing";
+
+  if (status.kind === "sequence") {
+    return (
+      <ScanSequence
+        photo={status.outcome.photo}
+        landmarks={status.outcome.input?.landmarks ?? []}
+        result={status.outcome.result}
+        onDone={() => router.push(`/results/${status.id}`)}
+      />
+    );
+  }
 
   return (
     <main className="mx-auto w-full max-w-xl px-5 py-6 flex flex-col gap-5">

@@ -60,3 +60,70 @@ body {
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
 }
+
+/* Scan-sequence choreography */
+.fh-scanline {
+  animation: fh-sweep 450ms cubic-bezier(0.45, 0, 0.55, 1) 2 alternate;
+}
+@keyframes fh-sweep {
+  from {
+    transform: translateY(-10%);
+  }
+  to {
+    transform: translateY(520%);
+  }
+}
+.fh-status {
+  animation: fh-fade 220ms ease-out;
+}
+@keyframes fh-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes fh-land {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  40% {
+    transform: scale(1.08);
+    filter: brightness(1.25);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+/* Results entrance stagger (continuity with the scan reveal) */
+@keyframes fh-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fh-enter > * {
+  animation: fh-rise 350ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.fh-enter > *:nth-child(1) { animation-delay: 40ms; }
+.fh-enter > *:nth-child(2) { animation-delay: 130ms; }
+.fh-enter > *:nth-child(3) { animation-delay: 220ms; }
+.fh-enter > *:nth-child(4) { animation-delay: 310ms; }
+.fh-enter > *:nth-child(5) { animation-delay: 400ms; }
+.fh-enter > *:nth-child(6) { animation-delay: 490ms; }
+.fh-enter > *:nth-child(7) { animation-delay: 580ms; }
+@media (prefers-reduced-motion: reduce) {
+  .fh-scanline,
+  .fh-status,
+  .fh-enter > * {
+    animation: none !important;
+  }
+}
