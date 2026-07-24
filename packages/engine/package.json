@@ -11,10 +11,12 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "calibrate": "tsx scripts/calibrate.ts"
   },
   "devDependencies": {
     "fast-check": "^3.23.2",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "vitest": "^3.0.5"
   }

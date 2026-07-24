@@ -161,6 +161,8 @@ export interface MetricResult {
   verdict: Verdict;
   confidence: number;
   flags: string[];
+  /** Population percentile from the calibration corpus; null pre-calibration. */
+  percentile: number | null;
   detail?: Record<string, number | number[]>;
 }
 

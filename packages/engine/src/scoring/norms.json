@@ -1,0 +1,8 @@
+{
+ "meta": {
+  "source": "placeholder — run `pnpm calibrate` with a landmark corpus to populate",
+  "faces": 0,
+  "engineNote": "empty tables disable percentile display"
+ },
+ "metrics": {}
+}

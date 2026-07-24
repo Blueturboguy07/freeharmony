@@ -232,6 +232,11 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
               <span className={`text-sm ${VERDICT_STYLE[m.verdict].cls}`}>
                 {VERDICT_STYLE[m.verdict].label}
               </span>
+              {m.percentile !== null && m.percentile !== undefined && (
+                <span className="text-xs text-ink-2" title="vs. the FFHQ calibration corpus">
+                  {ordinal(m.percentile)} pctile
+                </span>
+              )}
               {m.confidence < 0.6 && (
                 <span className="text-xs text-ink-3">low confidence</span>
               )}
@@ -353,6 +358,15 @@ function Shell({
       {children}
     </main>
   );
+}
+
+function ordinal(n: number): string {
+  const rem10 = n % 10;
+  const rem100 = n % 100;
+  if (rem10 === 1 && rem100 !== 11) return `${n}st`;
+  if (rem10 === 2 && rem100 !== 12) return `${n}nd`;
+  if (rem10 === 3 && rem100 !== 13) return `${n}rd`;
+  return `${n}th`;
 }
 
 function formatValue(m: MetricResult): string {

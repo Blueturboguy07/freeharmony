@@ -11,6 +11,7 @@ import { METRICS } from "./metrics/registry";
 import { resolveBand } from "./scoring/bands";
 import { round1, subScore, verdictOf } from "./scoring/curve";
 import { aggregate } from "./scoring/aggregate";
+import { percentileOf } from "./scoring/norms";
 
 export const ENGINE_VERSION = "0.1.0";
 
@@ -109,6 +110,7 @@ export function analyze(input: ScanInput): ScanResult {
       verdict: verdictOf(score),
       confidence,
       flags: computed.flags ?? [],
+      percentile: percentileOf(def.key, computed.value),
       detail: computed.detail,
     });
     weights[def.key] = { area: def.area, weight: def.weight };
@@ -152,6 +154,7 @@ export { runGates, eyeAspectRatio } from "./gates/index";
 export { METRICS, TRICHION_K, computeJawEdgeSupport } from "./metrics/registry";
 export { BANDS, resolveBand } from "./scoring/bands";
 export { subScore, verdictOf, round1 } from "./scoring/curve";
+export { percentileOf, NORMS_META } from "./scoring/norms";
 export { AREA_WEIGHTS, AREA_LABELS, aggregate, tierOf } from "./scoring/aggregate";
 export * as LANDMARKS from "./landmarks/indices";
 export {
