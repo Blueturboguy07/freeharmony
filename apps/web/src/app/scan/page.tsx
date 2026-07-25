@@ -72,6 +72,10 @@ export default function ScanPage() {
   const analyzeCanvas = useCallback(
     async (canvas: HTMLCanvasElement) => {
       setStatus({ kind: "analyzing" });
+      // Landmark detection blocks the main thread for a beat; yield two
+      // frames so the "Measuring…" state actually PAINTS before the work
+      // starts — otherwise the tap feels dead.
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
       try {
         const profile = loadProfile();
         const { result, photo, input } = await runScan(
@@ -210,13 +214,22 @@ export default function ScanPage() {
         </div>
       )}
 
-      {cameraOn && status.kind !== "analyzing" && (
+      {cameraOn && (
         <button
           onClick={capture}
-          disabled={!modelReady}
-          className="gold-gradient rounded-full py-4 text-sm font-semibold tracking-[0.15em] uppercase disabled:opacity-50"
+          disabled={!modelReady || status.kind === "analyzing"}
+          className="gold-gradient btn-press rounded-full py-4 text-sm font-semibold tracking-[0.15em] uppercase disabled:opacity-60"
         >
-          {modelReady ? "Capture" : "Loading model…"}
+          {status.kind === "analyzing" ? (
+            <span className="inline-flex items-center gap-2">
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-on-gold/30 border-t-on-gold" />
+              Measuring…
+            </span>
+          ) : modelReady ? (
+            "Capture"
+          ) : (
+            "Loading model…"
+          )}
         </button>
       )}
 

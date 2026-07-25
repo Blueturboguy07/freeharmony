@@ -543,7 +543,10 @@ function ShareButton({ scan }: { scan: StoredScan }) {
   }, [scan]);
 
   return (
-    <button onClick={() => void share()} className="text-sm text-ink-2 hover:text-ink">
+    <button
+      onClick={() => void share()}
+      className="btn-press rounded-full border border-gold/40 px-4 py-1.5 text-sm text-gold hover:border-gold/70"
+    >
       Share ↗
     </button>
   );

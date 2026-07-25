@@ -61,6 +61,12 @@ export default function SettingsPage() {
           Applies to new scans. Neutral uses the union of both reference
           ranges, so it never penalizes you for not declaring.
         </p>
+        <Link
+          href="/welcome#edit"
+          className="card btn-press py-3 text-center text-sm text-ink-2 hover:text-ink"
+        >
+          Edit all onboarding answers →
+        </Link>
       </section>
 
       <AiSettings />

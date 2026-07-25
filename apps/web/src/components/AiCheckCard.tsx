@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { loadAiConfig, runDeepReport, runSanityCheck } from "@/lib/ai";
-import { loadProfile, updateScan, type StoredScan } from "@/lib/store";
+import { loadProfile, personalContext, updateScan, type StoredScan } from "@/lib/store";
 
 /**
  * AI second-opinion panel on the results screen. Invariant enforced upstream:
@@ -47,8 +47,7 @@ export function AiCheckCard({
     setBusy("report");
     setError(null);
     try {
-      const profile = loadProfile();
-      const r = await runDeepReport(scan, profile.sex, profile.ageRange);
+      const r = await runDeepReport(scan, personalContext(loadProfile()));
       const next = updateScan(scan.id, { ai: { ...scan.ai, report: r } });
       if (next) {
         onScanUpdated(next);

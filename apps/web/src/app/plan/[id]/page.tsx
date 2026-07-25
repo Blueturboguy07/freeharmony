@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { generatePlan, type Plan } from "@freeharmony/advice";
-import { getScan, loadProfile, type StoredScan } from "@/lib/store";
+import { getScan, loadProfile, personalContext, type StoredScan } from "@/lib/store";
 
 const CATEGORY_ICON: Record<string, string> = {
   photography: "📷",
@@ -26,7 +26,7 @@ export default function PlanPage({ params }: { params: Promise<{ id: string }> }
     const s = getScan(id) ?? null;
     setScan(s);
     if (s?.result.ok) {
-      setPlan(generatePlan(s.result, loadProfile().sex));
+      setPlan(generatePlan(s.result, personalContext(loadProfile())));
     }
   }, [id]);
 

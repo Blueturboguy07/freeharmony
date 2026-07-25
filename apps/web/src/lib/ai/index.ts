@@ -1,7 +1,6 @@
 "use client";
 
-import { generatePlan } from "@freeharmony/advice";
-import type { Sex } from "@freeharmony/engine";
+import { generatePlan, type PersonalContext } from "@freeharmony/advice";
 import type { StoredScan } from "../store";
 import { loadAiConfig } from "./config";
 import { buildAnnotatedOverlay, dataUrlToBase64 } from "./overlay";
@@ -170,13 +169,26 @@ export async function runAiSummary(scan: StoredScan): Promise<DeepReport> {
 }
 
 /** Generate the narrative deep report (markdown). */
-export async function runDeepReport(scan: StoredScan, sex: Sex, ageRange?: string): Promise<DeepReport> {
+export async function runDeepReport(scan: StoredScan, personal: PersonalContext): Promise<DeepReport> {
   const cfg = loadAiConfig();
   if (cfg.provider === "none") throw new Error("No AI provider configured");
   if (scan.result.overall === null) throw new Error("No score to report on");
 
-  const plan = generatePlan(scan.result, sex);
-  const userText = `Profile: presentation=${sex}${ageRange ? `, age=${ageRange}` : ""}.
+  const plan = generatePlan(scan.result, personal);
+  const profileLine = [
+    `presentation=${personal.sex}`,
+    personal.ageRange && `age=${personal.ageRange}`,
+    personal.goal && `goal=${personal.goal}`,
+    personal.skinType && `skin=${personal.skinType}`,
+    personal.sleep && `sleep=${personal.sleep}`,
+    personal.diet && `diet=${personal.diet}`,
+    personal.activity && `activity=${personal.activity}`,
+    personal.experience && `experience=${personal.experience}`,
+    personal.concerns?.length && `concerns=${personal.concerns.join("/")}`,
+  ]
+    .filter(Boolean)
+    .join(", ");
+  const userText = `Profile (from onboarding — reference these answers directly so the report feels personal): ${profileLine}.
 
 Computed measurements:
 ${buildMeasurementPayload(scan.result)}

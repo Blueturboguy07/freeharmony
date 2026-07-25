@@ -15,8 +15,33 @@ export interface Profile {
   onboarded: boolean;
   sex: Sex;
   ageRange?: string;
+  goal?: string;
+  skinType?: "oily" | "dry" | "normal" | "combination" | "sensitive";
+  skincare?: string[];
+  diet?: "balanced" | "high-protein" | "plant-based" | "not-great";
+  sleep?: "<5" | "6-8" | "8+" | "irregular";
+  activity?: "sedentary" | "light" | "regular" | "athlete";
+  concerns?: string[];
+  experience?: "beginner" | "intermediate" | "advanced";
+  /** legacy field kept for older profiles */
   goals?: string[];
   nickname?: string;
+}
+
+/** The slice of the profile the advice engine personalizes against. */
+export function personalContext(p: Profile) {
+  return {
+    sex: p.sex,
+    ageRange: p.ageRange,
+    goal: p.goal,
+    skinType: p.skinType,
+    skincare: p.skincare,
+    diet: p.diet,
+    sleep: p.sleep,
+    activity: p.activity,
+    concerns: p.concerns,
+    experience: p.experience,
+  };
 }
 
 export interface StoredScan {
