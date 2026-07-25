@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Pt, ScanResult } from "@freeharmony/engine";
 import { LANDMARKS } from "@freeharmony/engine";
+import { cropBoxAspect, faceSquareCrop, toCrop, FULL_FRAME } from "@/lib/faceCrop";
 
 /**
  * Staged biometric-scan reveal. The actual computation finished before this
@@ -114,14 +115,26 @@ export function ScanSequence({
       }));
   }, [result]);
 
+  // Same square, face-centred window the results page uses — so the reveal and
+  // the results photo are the same picture, and neither is stretched to fit.
+  const imageAspect =
+    img && img.naturalHeight > 0 ? img.naturalWidth / img.naturalHeight : null;
+  const crop = useMemo(
+    () => (imageAspect ? faceSquareCrop(landmarks, imageAspect) : FULL_FRAME),
+    [imageAspect, landmarks],
+  );
+  const boxAspect = imageAspect ? cropBoxAspect(crop, imageAspect) : 4 / 5;
+  /** Landmarks in crop space — everything drawn over the photo uses these. */
+  const view = useMemo(() => landmarks.map((p) => toCrop(p, crop)), [landmarks, crop]);
+
   // Per-dot cluster assignment with deterministic jitter.
   const dots = useMemo(() => {
-    if (landmarks.length === 0) return [];
+    if (view.length === 0) return [];
     const L = LANDMARKS;
     const used = new Set<number>();
     const clusters: number[][] = [];
     const add = (idx: readonly number[]) => {
-      clusters.push(idx.filter((i) => i < landmarks.length && !used.has(i)));
+      clusters.push(idx.filter((i) => i < view.length && !used.has(i)));
       for (const i of idx) used.add(i);
     };
     add(L.FACE_OVAL);
@@ -131,8 +144,8 @@ export function ScanSequence({
     add(LIPS_OUTER);
     // Remaining mesh split into 3 vertical bands (forehead → mid → lower).
     const rest: number[] = [];
-    for (let i = 0; i < landmarks.length; i++) if (!used.has(i)) rest.push(i);
-    rest.sort((a, b) => landmarks[a]!.y - landmarks[b]!.y);
+    for (let i = 0; i < view.length; i++) if (!used.has(i)) rest.push(i);
+    rest.sort((a, b) => view[a]!.y - view[b]!.y);
     const third = Math.ceil(rest.length / 3);
     clusters.push(rest.slice(0, third), rest.slice(third, 2 * third), rest.slice(2 * third));
 
@@ -144,24 +157,24 @@ export function ScanSequence({
         const jitter = ((i * 2654435761) >>> 16) % 60;
         out.push({
           i,
-          x: landmarks[i]!.x,
-          y: landmarks[i]!.y,
+          x: view[i]!.x,
+          y: view[i]!.y,
           start: PHASE_B + ci * CLUSTER_SPAN + (j % 8) * 6 + jitter,
         });
       });
     });
     return out;
-  }, [landmarks]);
+  }, [view]);
 
   const paths = useMemo(() => {
-    if (landmarks.length === 0) return [];
+    if (view.length === 0) return [];
     const L = LANDMARKS;
     const mk = (idx: readonly number[], start: number) => ({
       d:
         "M " +
         idx
-          .filter((i) => i < landmarks.length)
-          .map((i) => `${(landmarks[i]!.x * 100).toFixed(2)},${(landmarks[i]!.y * 100).toFixed(2)}`)
+          .filter((i) => i < view.length)
+          .map((i) => `${(view[i]!.x * 100).toFixed(2)},${(view[i]!.y * 100).toFixed(2)}`)
           .join(" L "),
       start,
     });
@@ -175,7 +188,7 @@ export function ScanSequence({
       mk(LIPS_OUTER, PHASE_B + 1080),
       mk(L.MANDIBLE_CONTOUR, PHASE_B + 1300),
     ];
-  }, [landmarks]);
+  }, [view]);
 
   useEffect(() => {
     const image = new Image();
@@ -218,9 +231,13 @@ export function ScanSequence({
     if (!canvas || !wrap || !img) return;
     const rect = wrap.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    if (canvas.width !== Math.round(rect.width * dpr)) {
-      canvas.width = Math.round(rect.width * dpr);
-      canvas.height = Math.round(rect.height * dpr);
+    const wantW = Math.round(rect.width * dpr);
+    const wantH = Math.round(rect.height * dpr);
+    // Height matters too: the box switches from its 4:5 placeholder to the
+    // photo's real aspect once the image (and so the crop) is known.
+    if (canvas.width !== wantW || canvas.height !== wantH) {
+      canvas.width = wantW;
+      canvas.height = wantH;
     }
     const ctx = canvas.getContext("2d")!;
     const W = canvas.width;
@@ -229,7 +246,17 @@ export function ScanSequence({
     // Photo: desaturated + dim during acquisition, restored during landmarking.
     const restore = clamp01((elapsed - PHASE_B) / 500);
     ctx.filter = `saturate(${0.7 + 0.3 * restore}) brightness(${0.62 + 0.38 * restore})`;
-    ctx.drawImage(img, 0, 0, W, H);
+    ctx.drawImage(
+      img,
+      crop.x * img.naturalWidth,
+      crop.y * img.naturalHeight,
+      crop.w * img.naturalWidth,
+      crop.h * img.naturalHeight,
+      0,
+      0,
+      W,
+      H,
+    );
     ctx.filter = "none";
 
     if (reduced) return; // dots/scanline are motion — skip entirely
@@ -252,7 +279,7 @@ export function ScanSequence({
     }
     ctx.restore();
     ctx.globalAlpha = 1;
-  }, [elapsed, img, dots, reduced]);
+  }, [elapsed, img, dots, reduced, crop]);
 
   const inA = elapsed < PHASE_B;
   const statusIdx = Math.min(
@@ -270,7 +297,7 @@ export function ScanSequence({
       <div
         ref={wrapRef}
         className="relative w-full max-w-sm overflow-hidden rounded-card border border-line"
-        style={{ aspectRatio: "4 / 5" }}
+        style={{ aspectRatio: `${boxAspect}` }}
       >
         <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
 

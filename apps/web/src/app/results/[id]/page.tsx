@@ -13,6 +13,16 @@ import {
 import { AREA_LABELS, AREA_WEIGHTS } from "@freeharmony/engine";
 import type { AreaKey } from "@freeharmony/engine";
 import { reanalyze } from "@/lib/scan";
+import {
+  cropBoxAspect,
+  cropImageStyle,
+  faceSquareCrop,
+  fromCrop,
+  photoBoxStyle,
+  toCrop,
+  FULL_FRAME,
+  type Crop,
+} from "@/lib/faceCrop";
 import { getScan, loadProfile, loadScans, saveScan, type StoredScan } from "@/lib/store";
 import { generatePlan } from "@freeharmony/advice";
 import { personalContext } from "@/lib/store";
@@ -73,6 +83,25 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
     }
   }, [scan, draftOverrides]);
 
+  // Square, face-centred framing for the photo card. The engine's frame gives
+  // us the aspect synchronously (the stored JPEG is a straight downscale of the
+  // capture), so there's no uncropped flash on load.
+  const landmarks = scan?.input?.landmarks;
+  const photoAspect = useImageAspect(
+    scan?.photo,
+    scan?.result.frame
+      ? scan.result.frame.imageWidth / scan.result.frame.imageHeight
+      : null,
+  );
+  const photoCrop = useMemo(
+    () =>
+      photoAspect && landmarks?.length
+        ? faceSquareCrop(landmarks, photoAspect)
+        : FULL_FRAME,
+    [photoAspect, landmarks],
+  );
+  const photoBox = photoAspect ? cropBoxAspect(photoCrop, photoAspect) : null;
+
   if (scan === undefined) {
     return <Shell title="Metrics Explorer"><p className="label-caps animate-pulse p-8 text-center">Loading…</p></Shell>;
   }
@@ -111,10 +140,15 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
       ) : (
         <>
           {/* Photo viewport with per-metric overlay */}
-      <div className="card relative overflow-hidden">
+      <div
+        className="card relative mx-auto w-full overflow-hidden"
+        style={photoBox ? photoBoxStyle(photoBox) : undefined}
+      >
         <PhotoOverlay
           photo={scan.photo}
           landmarks={scan.input?.landmarks ?? []}
+          crop={photoCrop}
+          boxAspect={photoBox}
           overlay={selectedDef.overlay}
           adjusting={adjusting}
           overrides={{ ...scan.overrides, ...draftOverrides }}
@@ -345,6 +379,10 @@ function FeedbackRanked({ scan }: { scan: StoredScan }) {
 /** SIDE tab: contour-anchor profile analysis (separate from the mesh). */
 function SideView({ scan }: { scan: StoredScan }) {
   const side = scan.side;
+  // The eight profile anchors are placed by hand on the silhouette, so there's
+  // no reliable face box to crop to — bound the height instead.
+  const aspect = useImageAspect(side?.photo, null);
+
   if (!side) {
     return (
       <div className="card p-8 text-center flex flex-col gap-4">
@@ -365,7 +403,10 @@ function SideView({ scan }: { scan: StoredScan }) {
   }
   return (
     <>
-      <div className="card relative overflow-hidden">
+      <div
+        className="card relative mx-auto w-full overflow-hidden"
+        style={aspect ? photoBoxStyle(aspect) : undefined}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={side.photo} alt="Side profile" className="w-full" draggable={false} />
         <svg
@@ -452,6 +493,33 @@ function Shell({
   );
 }
 
+/**
+ * Natural width/height of an image URL. `fallback` is used until (or instead
+ * of) the decode — the engine frame already knows the capture's aspect, so
+ * passing it avoids a layout jump on first paint.
+ */
+function useImageAspect(src: string | undefined, fallback: number | null): number | null {
+  const [aspect, setAspect] = useState<number | null>(fallback);
+
+  useEffect(() => {
+    setAspect(fallback);
+    if (!src) return;
+    let live = true;
+    const img = new Image();
+    img.onload = () => {
+      if (live && img.naturalWidth > 0 && img.naturalHeight > 0) {
+        setAspect(img.naturalWidth / img.naturalHeight);
+      }
+    };
+    img.src = src;
+    return () => {
+      live = false;
+    };
+  }, [src, fallback]);
+
+  return aspect;
+}
+
 function ordinal(n: number): string {
   const rem10 = n % 10;
   const rem100 = n % 100;
@@ -476,10 +544,18 @@ function bandText(m: MetricResult): string {
   return `${fmt(m.band.lo)} – ${fmt(m.band.hi)}`;
 }
 
-/** SVG landmark overlay on top of the scan photo. */
+/**
+ * SVG landmark overlay on top of the scan photo.
+ *
+ * Everything the caller passes in — landmarks, overrides, drag callbacks — is
+ * in image-normalized coordinates; `crop` is the square window we actually
+ * show, so points are mapped into it for drawing and back out for input.
+ */
 function PhotoOverlay({
   photo,
   landmarks,
+  crop,
+  boxAspect,
   overlay,
   adjusting,
   overrides,
@@ -487,6 +563,9 @@ function PhotoOverlay({
 }: {
   photo: string;
   landmarks: Array<{ x: number; y: number; z: number }>;
+  crop: Crop;
+  /** null until the photo's aspect is known — render it uncropped until then. */
+  boxAspect: number | null;
   overlay: { points: number[]; polylines: number[][] };
   adjusting: boolean;
   overrides: Record<number, { x: number; y: number }>;
@@ -497,28 +576,41 @@ function PhotoOverlay({
 
   const posOf = useCallback(
     (i: number): { x: number; y: number } | null => {
-      const o = overrides[i];
-      if (o) return o;
-      const p = landmarks[i];
-      return p ? { x: p.x, y: p.y } : null;
+      const p = overrides[i] ?? landmarks[i];
+      return p ? toCrop(p, crop) : null;
     },
-    [landmarks, overrides],
+    [landmarks, overrides, crop],
   );
 
-  const toNormalized = useCallback((e: React.PointerEvent): { x: number; y: number } | null => {
-    const svg = svgRef.current;
-    if (!svg) return null;
-    const rect = svg.getBoundingClientRect();
-    return {
-      x: Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)),
-      y: Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height)),
-    };
-  }, []);
+  const toNormalized = useCallback(
+    (e: React.PointerEvent): { x: number; y: number } | null => {
+      const svg = svgRef.current;
+      if (!svg) return null;
+      const rect = svg.getBoundingClientRect();
+      return fromCrop(
+        {
+          x: Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)),
+          y: Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height)),
+        },
+        crop,
+      );
+    },
+    [crop],
+  );
 
   return (
-    <div className="relative">
+    <div
+      className="relative overflow-hidden"
+      style={boxAspect ? { aspectRatio: `${boxAspect}` } : undefined}
+    >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={photo} alt="Your scan" className="w-full" draggable={false} />
+      <img
+        src={photo}
+        alt="Your scan"
+        className={boxAspect ? undefined : "w-full"}
+        style={boxAspect ? cropImageStyle(crop) : undefined}
+        draggable={false}
+      />
       {landmarks.length > 0 && (
         <svg
           ref={svgRef}
@@ -589,15 +681,27 @@ function ShareButton({ scan }: { scan: StoredScan }) {
       img.onerror = () => rej(new Error("decode"));
       img.src = scan.photo;
     });
+    // Share the same square framing the user just looked at.
+    const landmarks = scan.input?.landmarks ?? [];
+    const crop =
+      landmarks.length > 0
+        ? faceSquareCrop(landmarks, img.naturalWidth / img.naturalHeight)
+        : FULL_FRAME;
+    const sx = crop.x * img.naturalWidth;
+    const sy = crop.y * img.naturalHeight;
+    const sw = crop.w * img.naturalWidth;
+    const sh = crop.h * img.naturalHeight;
+
     const W = 720;
-    const H = Math.round((img.naturalHeight / img.naturalWidth) * W) + 180;
+    const photoH = Math.round((sh / sw) * W);
+    const H = photoH + 180;
     const c = document.createElement("canvas");
     c.width = W;
     c.height = H;
     const ctx = c.getContext("2d")!;
     ctx.fillStyle = "#0c0a08";
     ctx.fillRect(0, 0, W, H);
-    ctx.drawImage(img, 0, 0, W, H - 180);
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, photoH);
     ctx.fillStyle = "#f2ede6";
     ctx.font = "600 22px Georgia, serif";
     ctx.fillText(`Harmony ${r.overall.toFixed(1)}%`, 28, H - 120);
