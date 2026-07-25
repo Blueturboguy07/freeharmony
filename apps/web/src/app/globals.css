@@ -61,6 +61,27 @@ body {
   border-radius: var(--radius-card);
 }
 
+/* Pulsing improve pill */
+@keyframes fh-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(234, 208, 164, 0.45);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 22px 4px rgba(234, 208, 164, 0.25);
+    transform: scale(1.035);
+  }
+}
+.fh-improve-pill {
+  animation: fh-pulse 2.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fh-improve-pill {
+    animation: none;
+  }
+}
+
 /* Instant tactile feedback on every pressable */
 .btn-press {
   transition: transform 120ms cubic-bezier(0.22, 1, 0.36, 1), opacity 120ms ease;

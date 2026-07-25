@@ -14,8 +14,9 @@ import { AREA_LABELS, AREA_WEIGHTS } from "@freeharmony/engine";
 import type { AreaKey } from "@freeharmony/engine";
 import { reanalyze } from "@/lib/scan";
 import { getScan, loadProfile, loadScans, saveScan, type StoredScan } from "@/lib/store";
+import { generatePlan } from "@freeharmony/advice";
+import { personalContext } from "@/lib/store";
 import { AiCheckCard } from "@/components/AiCheckCard";
-import { SummaryCard } from "@/components/SummaryCard";
 
 const TIER_LABEL: Record<Tier, string> = {
   excellent: "Excellent",
@@ -90,8 +91,6 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
 
   return (
     <Shell title="Metrics Explorer" shareScan={scan}>
-      <SummaryCard scan={scan} onScanUpdated={setScan} />
-
       {/* Front / Side */}
       <div className="grid grid-cols-2 gap-2">
         {(["front", "side"] as const).map((v) => (
@@ -179,38 +178,51 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
         </p>
       )}
 
-      {/* Overall harmony — muted when the AI cross-check flags the scan */}
+      {/* Overall — population score leads, band-fit harmony below */}
       <div
         className={`card px-5 py-4 flex flex-col gap-2 ${
           scan.ai?.sanity?.confidence === "low" ? "opacity-50" : ""
         }`}
       >
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="label-caps">Overall Harmony</p>
-            <p className="text-lg">{result.tier ? TIER_LABEL[result.tier] : "—"}</p>
-          </div>
-          <p className="numeral text-4xl">
-            {result.overall?.toFixed(1)}
-            <span className="text-xl text-ink-2">%</span>
-          </p>
-        </div>
-        {result.standardized !== null && result.overallPercentile !== null && (
-          <div className="flex items-baseline justify-between border-t border-line pt-2">
-            <span className="text-xs text-ink-2">
-              vs. population · standardized{" "}
-              <span className="numeral text-sm text-gold">{result.standardized.toFixed(1)}</span>
-              <span className="text-ink-3"> (50 = median face)</span>
-            </span>
-            <span className="text-xs text-ink-2">
-              top{" "}
-              <span className="numeral text-sm text-gold">
-                {Math.max(1, 100 - result.overallPercentile)}%
+        {result.standardized !== null && result.overallPercentile !== null ? (
+          <>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="label-caps">Your Score</p>
+                <p className="text-lg">
+                  Top {Math.max(1, 100 - result.overallPercentile)}% of faces
+                </p>
+              </div>
+              <p className="numeral text-4xl">{result.standardized.toFixed(1)}</p>
+            </div>
+            <div className="flex items-baseline justify-between border-t border-line pt-2">
+              <span className="text-xs text-ink-2">
+                50 = median face · 15 pts = 1 population SD
               </span>
-            </span>
+              <span className="text-xs text-ink-2">
+                harmony{" "}
+                <span className="numeral text-sm text-gold">
+                  {result.overall?.toFixed(1)}%
+                </span>{" "}
+                · {result.tier ? TIER_LABEL[result.tier] : "—"}
+              </span>
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="label-caps">Overall Harmony</p>
+              <p className="text-lg">{result.tier ? TIER_LABEL[result.tier] : "—"}</p>
+            </div>
+            <p className="numeral text-4xl">
+              {result.overall?.toFixed(1)}
+              <span className="text-xl text-ink-2">%</span>
+            </p>
           </div>
         )}
       </div>
+
+      <FeedbackRanked scan={scan} />
 
       <AiCheckCard scan={scan} onScanUpdated={setScan} />
 
@@ -263,7 +275,70 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
       </div>
         </>
       )}
+
+      {/* Pulsing improve pill — bottom-center, above the fold line */}
+      <Link
+        href={`/plan/${scan.id}`}
+        className="fh-improve-pill gold-gradient btn-press fixed bottom-5 left-1/2 z-40 -translate-x-1/2 rounded-full px-6 py-3 text-sm font-semibold uppercase tracking-[0.12em] shadow-lg"
+      >
+        ✦ How can I improve?
+      </Link>
+      <div className="h-14" aria-hidden />
     </Shell>
+  );
+}
+
+/**
+ * Ranked feedback: the top issues from this scan, worst-first, each with the
+ * specific personalized lever for it — computed from the same deterministic
+ * plan engine, using the onboarding answers.
+ */
+function FeedbackRanked({ scan }: { scan: StoredScan }) {
+  const items = useMemo(() => {
+    if (!scan.result.ok) return [];
+    const plan = generatePlan(scan.result, personalContext(loadProfile()));
+    // Only deficit-driven items here (baselines live on the full plan page),
+    // already sorted by priority = what matters most first.
+    return plan.items.filter((i) => i.rule.targets.length > 0).slice(0, 5);
+  }, [scan]);
+
+  if (items.length === 0) return null;
+
+  return (
+    <section className="card p-5 flex flex-col gap-4">
+      <div className="flex items-baseline justify-between">
+        <p className="label-caps">Feedback — most important first</p>
+        <Link href={`/plan/${scan.id}`} className="text-xs text-gold">
+          Full plan →
+        </Link>
+      </div>
+      <ol className="flex flex-col gap-4">
+        {items.map((item, i) => {
+          const worst = scan.result.metrics
+            .filter((m) => item.rule.targets.includes(m.key))
+            .sort((a, b) => a.score - b.score)[0];
+          return (
+            <li key={item.rule.id} className="flex gap-3">
+              <span className="numeral grid h-8 w-8 shrink-0 place-items-center rounded-full border border-gold/40 text-gold">
+                {i + 1}
+              </span>
+              <div className="min-w-0">
+                <p className="font-medium leading-snug">
+                  {item.rule.title}
+                  {worst && (
+                    <span className="ml-2 text-xs text-work">
+                      {worst.label} {Math.round(worst.score)}/100
+                    </span>
+                  )}
+                </p>
+                <p className="mt-0.5 text-sm text-ink-2">{item.rule.body}</p>
+                <p className="mt-0.5 text-xs text-gold/80">{item.reason}</p>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
   );
 }
 

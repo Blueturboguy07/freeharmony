@@ -165,6 +165,52 @@ export const RULES: AdviceRule[] = [
     timeline: "weeks",
   },
 
+  // ---- targeted, metric-specific levers
+  {
+    id: "eye-depuff",
+    category: "lifestyle",
+    title: "De-puff the eye area",
+    body:
+      "Puffy lids visually flatten canthal tilt and break eye symmetry. Cut salty food and alcohol in the evening, sleep with your head slightly elevated, and finish your morning rinse with cold water on the eye area for a minute.",
+    impactNote: "Visible within days; strongest if evenings are currently salty/late.",
+    targets: ["canthalTilt", "eyeSymmetry"],
+    leverage: 0.5,
+    timeline: "days",
+  },
+  {
+    id: "camera-height",
+    category: "photography",
+    title: "Raise the camera to eye level or a touch above",
+    body:
+      "A camera below eye level tilts the eye line downward in the image and reads as negative canthal tilt — even when yours is positive. Shoot at eye level or a few degrees above, chin level.",
+    impactNote: "Changes the eye-area read immediately; costs nothing.",
+    targets: ["canthalTilt", "eyeToMouthAngle"],
+    leverage: 0.55,
+    timeline: "immediate",
+  },
+  {
+    id: "lip-care",
+    category: "skincare",
+    title: "Basic lip care",
+    body:
+      "Hydration and balm keep the vermilion full and defined; a gentle weekly exfoliation removes flake that visually thins the lip line. Honest framing: this is a subtle change, not a reshape.",
+    impactNote: "Subtle; a few days of consistency.",
+    targets: ["lipRatio"],
+    leverage: 0.35,
+    timeline: "days",
+  },
+  {
+    id: "morning-depuff",
+    category: "lifestyle",
+    title: "Cut morning facial puffiness",
+    body:
+      "Water retention softens the jawline border and rounds the midface for hours after waking. Levers: less sodium at dinner, real hydration through the day, and a cold rinse in the morning. (Massage tools move fluid temporarily — fine, but the effect is hours, not days.)",
+    impactNote: "Same-day effect on how defined the lower face reads; honest about being temporary.",
+    targets: ["jawlineDefinition", "midfaceRatio"],
+    leverage: 0.45,
+    timeline: "immediate",
+  },
+
   // ---- lifestyle
   {
     id: "sleep-hydration",
