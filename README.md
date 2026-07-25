@@ -16,9 +16,8 @@ We think that's garbage. So:
   landmarks. Same photo in, same score out — auditable in `packages/engine`, which has no
   dependencies and 100% reproducible tests.
 - **Your face never leaves your device.** Landmarking and scoring are fully client-side.
-  The only things that can ever leave your browser: an opt-in leaderboard row (nickname +
-  score, no photo), or an AI second-opinion call to a provider *you* configure (your local
-  Ollama, or your own Claude key). Both off by default.
+  The only thing that can ever leave your browser: an AI second-opinion call to a provider
+  *you* configure (your local Ollama, or your own Claude key). Off by default.
 - **No dark patterns.** One honest score, shown once. If your photo is too blurry or
   turned too far, we tell you to retake it instead of guessing.
 

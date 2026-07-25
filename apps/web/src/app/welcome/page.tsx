@@ -18,7 +18,7 @@ const SLIDES = [
   {
     title: "Your face",
     italic: "stays yours.",
-    body: "Photos never leave this device. The only things that can: an opt-in leaderboard score, or AI calls to a provider you control.",
+    body: "Photos never leave this device. The only thing that ever can: AI calls to a provider you control — and those are off by default.",
   },
 ];
 

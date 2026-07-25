@@ -98,16 +98,6 @@ export default function Home() {
         <span className="text-ink-3">›</span>
       </Link>
 
-      {/* Leaderboard */}
-      <Link href="/leaderboard" className="card px-5 py-4 flex items-center gap-4 hover:border-gold/40 transition-colors">
-        <div className="grid h-11 w-11 place-items-center rounded-xl bg-gold/10 text-gold">♛</div>
-        <div className="flex-1">
-          <p className="font-medium">Leaderboard</p>
-          <p className="text-sm text-ink-2">Opt-in, scores only — never photos</p>
-        </div>
-        <span className="text-ink-3">›</span>
-      </Link>
-
       <p className="mt-2 text-center text-xs text-ink-3">
         Free and open source (AGPL-3.0). Scores are photo-based estimates for
         self-improvement, not clinical measurements.

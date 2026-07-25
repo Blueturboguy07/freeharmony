@@ -9,7 +9,7 @@ import type {
 import type { StoredInput } from "./scan";
 
 // All persistence is localStorage — nothing ever leaves the device unless the
-// user explicitly opts in (leaderboard submit, AI provider call).
+// user explicitly opts in to an AI provider call.
 
 export interface Profile {
   onboarded: boolean;
@@ -25,7 +25,6 @@ export interface Profile {
   experience?: "beginner" | "intermediate" | "advanced";
   /** legacy field kept for older profiles */
   goals?: string[];
-  nickname?: string;
 }
 
 /** The slice of the profile the advice engine personalizes against. */
