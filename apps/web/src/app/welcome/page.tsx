@@ -6,6 +6,11 @@ import { loadProfile, saveProfile, type Profile } from "@/lib/store";
 
 const SLIDES = [
   {
+    title: "Scan your face,",
+    italic: "see your numbers.",
+    body: "Allow your camera or upload a photo — analysis takes about a second. You get a Harmony score, every metric, and what to work on next.",
+  },
+  {
     title: "Built on math,",
     italic: "not vibes.",
     body: "Landmark geometry measures your proportions in your browser. Deterministic: same photo in, same score out.",

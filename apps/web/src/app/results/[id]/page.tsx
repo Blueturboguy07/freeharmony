@@ -109,7 +109,13 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
     return (
       <Shell title="Metrics Explorer">
         <div className="card p-8 text-center flex flex-col gap-4">
-          <p>This scan doesn&apos;t exist on this device.</p>
+          <p className="font-medium">This scan isn&apos;t on this device.</p>
+          <p className="text-sm text-ink-2">
+            Scans are stored only on the device that took them — nothing is
+            uploaded, so a shared link or screenshot can&apos;t be reopened
+            on a different phone or browser. Run your own scan to get your
+            score here.
+          </p>
           <Link href="/scan" className="gold-gradient rounded-full px-6 py-3 text-sm font-semibold tracking-[0.15em] uppercase self-center">
             New Scan
           </Link>
