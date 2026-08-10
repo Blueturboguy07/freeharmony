@@ -18,23 +18,45 @@ type Status =
   | { kind: "sequence"; outcome: ScanOutcome; id: string }
   | { kind: "gate-failed"; gates: Gate[] };
 
+type ModelStatus = "loading" | "ready" | "error";
+
 export default function ScanPage() {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
-  const [modelReady, setModelReady] = useState(false);
+  const [modelStatus, setModelStatus] = useState<ModelStatus>("loading");
+  const [modelErrorMsg, setModelErrorMsg] = useState<string | null>(null);
 
-  // Warm the landmarker while the user positions themselves.
-  useEffect(() => {
+  // Warm the landmarker while the user positions themselves. Named error +
+  // a Retry button here, instead of leaving the Capture button reading
+  // "Loading model…" forever, is the whole fix for silent stalls (bad
+  // network mid-download, a device that can't init the GPU/CPU wasm
+  // delegate at all).
+  const loadModel = useCallback(() => {
+    setModelStatus("loading");
+    setModelErrorMsg(null);
     let cancelled = false;
     getLandmarker()
-      .then(() => !cancelled && setModelReady(true))
-      .catch(() => !cancelled && setModelReady(false));
+      .then(() => {
+        if (!cancelled) setModelStatus("ready");
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setModelStatus("error");
+        const message = err instanceof Error ? err.message : String(err);
+        setModelErrorMsg(
+          /fetch|network|load|abort/i.test(message)
+            ? "Face model failed to download. Check your connection and retry."
+            : "Face model failed to load on this device.",
+        );
+      });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => loadModel(), [loadModel]);
 
   const stopCamera = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -92,9 +114,12 @@ export default function ScanPage() {
         // The math is done — now stage the reveal.
         setStatus({ kind: "sequence", outcome: { result, photo, input }, id });
       } catch (err) {
+        const raw = err instanceof Error ? err.message : "unknown error";
         setStatus({
           kind: "camera-error",
-          message: `Analysis failed: ${err instanceof Error ? err.message : "unknown error"}`,
+          message: /fetch|network|load|abort/i.test(raw)
+            ? "Analysis failed: the face model couldn't download. Check your connection and retry."
+            : `Analysis failed: ${raw}`,
         });
       }
     },
@@ -147,6 +172,18 @@ export default function ScanPage() {
         <span className="label-caps">Face Scan</span>
         <span className="w-12" />
       </header>
+
+      {modelStatus === "error" && (
+        <div className="card border-work/40 p-4 flex items-center justify-between gap-3">
+          <p className="text-sm text-work">{modelErrorMsg}</p>
+          <button
+            onClick={loadModel}
+            className="shrink-0 text-sm text-gold underline underline-offset-4"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       <div className="card relative overflow-hidden aspect-[4/5]">
         <video
@@ -217,7 +254,7 @@ export default function ScanPage() {
       {cameraOn && (
         <button
           onClick={capture}
-          disabled={!modelReady || status.kind === "analyzing"}
+          disabled={modelStatus !== "ready" || status.kind === "analyzing"}
           className="gold-gradient btn-press rounded-full py-4 text-sm font-semibold tracking-[0.15em] uppercase disabled:opacity-60"
         >
           {status.kind === "analyzing" ? (
@@ -225,8 +262,10 @@ export default function ScanPage() {
               <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-on-gold/30 border-t-on-gold" />
               Measuring…
             </span>
-          ) : modelReady ? (
+          ) : modelStatus === "ready" ? (
             "Capture"
+          ) : modelStatus === "error" ? (
+            "Model unavailable"
           ) : (
             "Loading model…"
           )}
