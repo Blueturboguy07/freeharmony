@@ -1,0 +1,19 @@
+name: bugfix-lab-pnpm-gate
+on:
+  workflow_dispatch:
+    inputs:
+      pin_sha:
+        description: freeharmony commit to run the guide against
+        required: false
+        default: "420374370549f7e90603f030820128bfc9f62fc0"
+  push:
+    branches: [fix/publik-guide-pnpm-ignored-builds-windows]
+jobs:
+  run:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: run the guide's Windows install step
+        shell: pwsh
+        run: |
+          ./scripts/bugfix-lab/publik-guide-pnpm-ignored-builds-windows.ps1 -PinSha "${{ inputs.pin_sha || '420374370549f7e90603f030820128bfc9f62fc0' }}"
