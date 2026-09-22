@@ -139,13 +139,28 @@ export default function ScanPage() {
 
   const onUpload = useCallback(
     async (file: File) => {
-      const bitmap = await createImageBitmap(file);
-      const canvas = document.createElement("canvas");
-      canvas.width = bitmap.width;
-      canvas.height = bitmap.height;
-      canvas.getContext("2d")!.drawImage(bitmap, 0, 0);
-      bitmap.close();
-      void analyzeCanvas(canvas);
+      try {
+        const bitmap = await createImageBitmap(file);
+        const canvas = document.createElement("canvas");
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        canvas.getContext("2d")!.drawImage(bitmap, 0, 0);
+        bitmap.close();
+        void analyzeCanvas(canvas);
+      } catch (err) {
+        // createImageBitmap() rejects for formats the browser can't decode
+        // (e.g. HEIC from an iPhone/macOS camera roll, which the file
+        // picker offers by default and this input's accept="image/*"
+        // happily lets through). Without this, the rejection was unhandled
+        // and the UI never left the idle "Ready to measure?" state — no
+        // spinner, no error, no retry. Same catch->setStatus shape as
+        // startCamera and analyzeCanvas above.
+        const raw = err instanceof Error ? err.message : "unknown error";
+        setStatus({
+          kind: "camera-error",
+          message: `That photo couldn't be opened (${raw}). Try a JPEG or PNG instead, or use Start Camera.`,
+        });
+      }
     },
     [analyzeCanvas],
   );
